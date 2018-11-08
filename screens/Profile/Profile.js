@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Button,
   FlatList,
   Image,
   ScrollView,
@@ -7,13 +8,15 @@ import {
   Text,
   TouchableOpacity,
   View,
+  AsyncStorage,
 } from 'react-native';
 import { WebBrowser } from 'expo';
+import { connect } from 'react-redux';
 
 import { MonoText } from '../../components/StyledText';
 import { styles } from './styles';
 
-export default class Profile extends React.Component {
+class Profile extends React.Component {
   static navigationOptions = {
     header: null,
   };
@@ -36,10 +39,10 @@ export default class Profile extends React.Component {
           <View style={styles.getStartedContainer}>
             {this._maybeRenderDevelopmentModeWarning()}
 
-            <Text style={styles.getStartedText}>Get started by opening</Text>
+            <Text style={styles.getStartedText}>Welcome</Text>
 
             <View style={[styles.codeHighlightContainer, styles.homeScreenFilename]}>
-              <MonoText style={styles.codeHighlightText}>screens/Profile/Profile.js</MonoText>
+              <MonoText style={styles.codeHighlightText}>{this.props.user.username}</MonoText>
             </View>
 
             <Text style={styles.getStartedText}>
@@ -55,11 +58,7 @@ export default class Profile extends React.Component {
         </ScrollView>
 
         <View style={styles.tabBarInfoContainer}>
-          <Text style={styles.tabBarInfoText}>This is a tab bar. You can edit it in:</Text>
-
-          <View style={[styles.codeHighlightContainer, styles.navigationFilename]}>
-            <MonoText style={styles.codeHighlightText}>navigation/MainTabNavigator.js</MonoText>
-          </View>
+          <Button title="Actually, sign me out :)" onPress={this._signOutAsync} />
         </View>
       </View>
     );
@@ -97,4 +96,17 @@ export default class Profile extends React.Component {
       'https://docs.expo.io/versions/latest/guides/up-and-running.html#can-t-see-your-changes'
     );
   };
+
+  _signOutAsync = async () => {
+    await AsyncStorage.clear();
+    this.props.navigation.navigate('Auth');
+  };
 }
+
+const mapStateToProps = state => {
+  return {
+    user: state.login.profile,
+  };
+};
+
+export default connect(mapStateToProps, null)(Profile);
