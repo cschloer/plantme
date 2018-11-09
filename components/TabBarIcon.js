@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Icon } from 'expo';
 
 import Colors from '../constants/Colors';
@@ -15,3 +16,8 @@ export default class TabBarIcon extends React.Component {
     );
   }
 }
+
+TabBarIcon.propTypes = {
+  name: PropTypes.string,
+  focused: PropTypes.bool,
+};

@@ -14,6 +14,6 @@ export function setUserProfile(profile) {
     type: SET_USER,
     payload: {
       profile,
-    }
+    },
   };
 }

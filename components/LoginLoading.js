@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import {
   ActivityIndicator,
   AsyncStorage,
@@ -7,16 +8,23 @@ import {
   View,
 } from 'react-native';
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
+
 export default class LoginLoading extends React.Component {
   constructor(props) {
     super(props);
-    this._bootstrapAsync();
+    this.bootstrapAsync();
   }
 
   // Fetch the token from storage then navigate to our appropriate place
-  _bootstrapAsync = async () => {
+  bootstrapAsync = async () => {
     const userToken = await AsyncStorage.getItem('userToken');
-    console.log('User token', userToken);
 
     // This will switch to the App screen or Auth screen and this loading
     // screen will be unmounted and thrown away.
@@ -33,10 +41,7 @@ export default class LoginLoading extends React.Component {
     );
   }
 }
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+
+LoginLoading.propTypes = {
+  navigation: PropTypes.object,
+};
