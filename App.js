@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native';
 import {
+  Constants,
   AppLoading,
   Asset,
   Font,
@@ -20,8 +21,15 @@ import axiosMiddleware from 'redux-axios-middleware';
 import AppNavigator from './navigation/AppNavigator';
 import reducer from './reducer';
 
+const { manifest } = Constants;
+// Get the host computer's IP address if running locally
+const apiUrl = (typeof manifest.packagerOpts === 'object') && manifest.packagerOpts.dev
+  ? 'http://'.concat(manifest.debuggerHost.split(':').shift().concat(':5000'))
+  : 'api-name-here';
+console.log('API URL', apiUrl);
+
 const client = axios.create({
-  baseURL: 'https://api.github.com',
+  baseURL: apiUrl,
   responseType: 'json',
 });
 

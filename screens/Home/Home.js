@@ -1,19 +1,22 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {
+  Button,
+  FlatList,
+  Image,
   ScrollView,
   Text,
+  TouchableOpacity,
   View,
   AsyncStorage,
 } from 'react-native';
 import { WebBrowser } from 'expo';
 import { connect } from 'react-redux';
 
-import PlantCard from '../../components/PlantCard';
-import Loading from '../../components/Loading';
+import { MonoText } from '../../components/StyledText';
 import { styles } from './styles';
 
-class Profile extends React.Component {
+class Home extends React.Component {
   static navigationOptions = {
     header: null,
   };
@@ -60,45 +63,67 @@ class Profile extends React.Component {
   };
 
   render() {
-    if (
-      !this.props.userPlants
-      || this.props.userPlants.loading
-    ) {
-      return (
-        <Loading />
-      );
-    }
     return (
       <View style={styles.container}>
         <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-          {
-            this.props.userPlants.map((plant, i) => (
-              <PlantCard key={i} plant={plant} />
-            ))
-          }
-        </ScrollView>
-      </View>
+          <View style={styles.welcomeContainer}>
+            <Image
+              source={
+                /* eslint-disable global-require */
+                /* eslint-disable no-undef */
+                __DEV__
+                  ? require('../../assets/images/robot-dev.png')
+                  : require('../../assets/images/robot-prod.png')
+                /* eslint-enable global-require */
+                /* eslint-enable no-undef */
+              }
+              style={styles.welcomeImage}
+            />
+          </View>
 
+          <View style={styles.getStartedContainer}>
+            {this.maybeRenderDevelopmentModeWarning()}
+
+            <Text style={styles.getStartedText}>Welcome</Text>
+
+            <View style={[styles.codeHighlightContainer, styles.homeScreenFilename]}>
+              <MonoText style={styles.codeHighlightText}>{this.props.user.sub}</MonoText>
+            </View>
+
+            <Text style={styles.getStartedText}>
+              Change this text and your app will automatically reload.
+            </Text>
+          </View>
+
+          <View style={styles.helpContainer}>
+            <TouchableOpacity onPress={this.handleHelpPress} style={styles.helpLink}>
+              <Text style={styles.helpLinkText}>Help, it didn’t automatically reload!</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+
+        <View style={styles.tabBarInfoContainer}>
+          <Button title="Actually, sign me out :)" onPress={this.signOutAsync} />
+        </View>
+      </View>
     );
   }
 
 
 }
 
-Profile.propTypes = {
+Home.propTypes = {
   user: PropTypes.shape({
     name: PropTypes.string,
     sub: PropTypes.string,
   }),
-  userPlants: PropTypes.array,
   navigation: PropTypes.object,
 };
 
 const mapStateToProps = state => {
   return {
     user: state.login.profile,
-    userPlants: state.userPlant.plants,
   };
 };
 
-export default connect(mapStateToProps, null)(Profile);
+export default connect(mapStateToProps, null)(Home);

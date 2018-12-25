@@ -4,11 +4,26 @@ import { createStackNavigator, createBottomTabNavigator } from 'react-navigation
 
 import TabBarIcon from '../components/TabBarIcon';
 import Profile from '../screens/Profile/Profile';
+import Home from '../screens/Home/Home';
 import LinksScreen from '../screens/LinksScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
+const ProfileStack = createStackNavigator({
+  Profile,
+});
+
+ProfileStack.navigationOptions = {
+  tabBarLabel: 'Profile',
+  tabBarIcon: ({ focused }) => (
+    <TabBarIcon
+      focused={focused}
+      name={Platform.OS === 'ios' ? 'ios-leaf' : 'md-leaf'}
+    />
+  ),
+};
+
 const HomeStack = createStackNavigator({
-  Home: Profile,
+  Home,
 });
 
 HomeStack.navigationOptions = {
@@ -54,6 +69,7 @@ SettingsStack.navigationOptions = {
 };
 
 export default createBottomTabNavigator({
+  ProfileStack,
   HomeStack,
   LinksStack,
   SettingsStack,

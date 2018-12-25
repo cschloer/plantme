@@ -13,6 +13,7 @@ import jwtDecoder from 'jwt-decode';
 import { connect } from 'react-redux';
 
 import { setUserProfile } from '../reducers/login';
+import { getUserPlants } from '../reducers/user_plant';
 
 /*
   You need to swap out the Auth0 client id and domain with
@@ -32,9 +33,10 @@ const auth0Domain = 'https://plantme.auth0.com';
  * Converts an object to a query string.
  */
 function toQueryString(params) {
-  return `?${Object.entries(params)}`.map(
+  const query = Object.entries(params).map(
     ([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
   ).join('&');
+  return `?${query}`;
 }
 
 const styles = StyleSheet.create({
@@ -99,10 +101,13 @@ class Login extends React.Component {
     }
     const encodedToken = responseObj.id_token;
     const decodedToken = jwtDecoder(encodedToken);
-    const username = decodedToken.name;
+    console.log('decodedToken', decodedToken);
+    const { name, sub } = decodedToken;
     this.props.setUserProfile({
-      username,
+      name,
+      sub,
     });
+    this.props.getUserPlants(sub);
     await AsyncStorage.setItem('userToken', encodedToken);
     this.props.navigation.navigate('App');
   }
@@ -140,11 +145,13 @@ class Login extends React.Component {
 
 Login.propTypes = {
   setUserProfile: PropTypes.func,
+  getUserPlants: PropTypes.func,
   navigation: PropTypes.object,
 };
 
 const mapDispatchToProps = {
   setUserProfile,
+  getUserPlants,
 };
 
 export default connect(null, mapDispatchToProps)(Login);
