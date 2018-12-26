@@ -6,7 +6,7 @@ import {
 import { Card } from 'react-native-elements';
 
 
-class PlantCard extends React.Component {
+class PlantDetail extends React.Component {
 
   render() {
     const { name, created } = this.props.plant;
@@ -23,7 +23,7 @@ class PlantCard extends React.Component {
 
 }
 
-PlantCard.propTypes = {
+PlantDetail.propTypes = {
   plant: PropTypes.shape({
     created: PropTypes.string,
     id: PropTypes.number,
@@ -32,4 +32,4 @@ PlantCard.propTypes = {
   }),
 };
 
-export default PlantCard;
+export default PlantDetail;

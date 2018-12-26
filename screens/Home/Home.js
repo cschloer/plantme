@@ -14,7 +14,7 @@ import { WebBrowser } from 'expo';
 import { connect } from 'react-redux';
 
 import { MonoText } from '../../components/StyledText';
-import { styles } from './styles';
+import { styles } from '../styles';
 
 class Home extends React.Component {
   static navigationOptions = {

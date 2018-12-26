@@ -11,7 +11,7 @@ import { connect } from 'react-redux';
 
 import PlantCard from '../../components/PlantCard';
 import Loading from '../../components/Loading';
-import { styles } from './styles';
+import { styles } from '../styles';
 
 class Profile extends React.Component {
   static navigationOptions = {
@@ -61,8 +61,7 @@ class Profile extends React.Component {
 
   render() {
     if (
-      !this.props.userPlants
-      || this.props.userPlants.loading
+      this.props.userPlant.loading
     ) {
       return (
         <Loading />
@@ -72,8 +71,12 @@ class Profile extends React.Component {
       <View style={styles.container}>
         <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
           {
-            this.props.userPlants.map((plant, i) => (
-              <PlantCard key={i} plant={plant} />
+            this.props.userPlant.plants.map((plant, i) => (
+              <PlantCard
+                key={i}
+                plant={plant}
+                navigation={this.props.navigation}
+              />
             ))
           }
         </ScrollView>
@@ -90,14 +93,17 @@ Profile.propTypes = {
     name: PropTypes.string,
     sub: PropTypes.string,
   }),
-  userPlants: PropTypes.array,
+  userPlant: PropTypes.shape({
+    loading: PropTypes.bool,
+    plants: PropTypes.array,
+  }),
   navigation: PropTypes.object,
 };
 
 const mapStateToProps = state => {
   return {
     user: state.login.profile,
-    userPlants: state.userPlant.plants,
+    userPlant: state.userPlant,
   };
 };
 
