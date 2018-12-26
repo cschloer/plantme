@@ -22,13 +22,13 @@ export default function userPlantReducer(state = defaultState, action) {
     case GET_USER_PLANTS_SUCCESS:
       return { ...state, loading: false, plants: action.payload.data };
     case GET_USER_PLANTS_FAIL:
-      return { ...state, loading: false, error: 'Error while finding plants' };
+      return { ...state, loading: false, error: 'There was an error while loading plants' };
     case GET_SINGLE_USER_PLANT:
       return { ...state, singlePlantLoading: true };
     case GET_SINGLE_USER_PLANT_SUCCESS:
       return { ...state, singlePlantLoading: false, singlePlant: action.payload.data };
     case GET_SINGLE_USER_PLANT_FAIL:
-      return { ...state, singlePlantLoading: false, singlePlantError: 'Error while finding the plant' };
+      return { ...state, singlePlantLoading: false, singlePlantError: 'There was an error while loading the plant' };
     default:
       return state;
   }

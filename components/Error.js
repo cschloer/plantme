@@ -1,33 +1,48 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {
-  ActivityIndicator,
-  StatusBar,
+  Platform,
   StyleSheet,
   View,
+  Text,
 } from 'react-native';
+import { Icon } from 'expo';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#f8d7da',
+    color: '#fff',
   },
 });
 
-class Loading extends React.Component {
+class Error extends React.Component {
 
   // Render any loading content that you like here
   render() {
+    const { message } = this.props;
     return (
       <View style={styles.container}>
-        <ActivityIndicator />
-        <StatusBar barStyle="default" />
+        <Icon.Ionicons
+          name={Platform.OS === 'ios' ? 'ios-sad' : 'md-sad'}
+          size={64}
+        />
+        <Text>
+          {message}
+        </Text>
       </View>
     );
   }
 }
 
-Loading.propTypes = {};
+Error.propTypes = {
+  message: PropTypes.string,
+};
 
-export default Loading;
+Error.defaultProps = {
+  message: 'There was an error',
+};
+
+export default Error;

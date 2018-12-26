@@ -8,6 +8,7 @@ import {
 import { connect } from 'react-redux';
 
 import Loading from '../../components/Loading';
+import Error from '../../components/Error';
 import { getSingleUserPlant } from '../../reducers/user_plant';
 import { styles } from '../styles';
 
@@ -24,11 +25,16 @@ class PlantDetail extends React.Component {
   }
 
   render() {
-    const { singlePlant, singlePlantLoading, singlePlantError } = this.props.userPlant;
-    console.log('Userplant', this.props)
-    if (singlePlantError) {
-      // TODO error
-    } else if (singlePlantLoading) {
+    const { navigation, userPlant } = this.props;
+    const { singlePlant, singlePlantLoading, singlePlantError } = userPlant;
+    const plantId = navigation.getParam('plantId', false);
+
+    if (singlePlantError || !plantId) {
+      return (
+        <Error message={singlePlantError} />
+      );
+    }
+    if (singlePlantLoading) {
       return (
         <Loading />
       );

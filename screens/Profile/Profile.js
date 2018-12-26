@@ -11,6 +11,7 @@ import { connect } from 'react-redux';
 
 import PlantCard from '../../components/PlantCard';
 import Loading from '../../components/Loading';
+import Error from '../../components/Error';
 import { styles } from '../styles';
 
 class Profile extends React.Component {
@@ -60,9 +61,13 @@ class Profile extends React.Component {
   };
 
   render() {
-    if (
-      this.props.userPlant.loading
-    ) {
+    const { loading, error, plants } = this.props.userPlant;
+    if (error) {
+      return (
+        <Error message={error} />
+      );
+    }
+    if (loading) {
       return (
         <Loading />
       );
@@ -71,7 +76,7 @@ class Profile extends React.Component {
       <View style={styles.container}>
         <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
           {
-            this.props.userPlant.plants.map((plant, i) => (
+            plants.map((plant, i) => (
               <PlantCard
                 key={i}
                 plant={plant}
@@ -81,11 +86,8 @@ class Profile extends React.Component {
           }
         </ScrollView>
       </View>
-
     );
   }
-
-
 }
 
 Profile.propTypes = {
@@ -95,6 +97,7 @@ Profile.propTypes = {
   }),
   userPlant: PropTypes.shape({
     loading: PropTypes.bool,
+    error: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
     plants: PropTypes.array,
   }),
   navigation: PropTypes.object,
