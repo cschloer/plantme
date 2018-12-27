@@ -18,10 +18,16 @@ export const styles = StyleSheet.create({
   contentContainer: {
     paddingTop: 30,
   },
+  secondPageContentContainer: {
+    padding: 3,
+  },
   welcomeContainer: {
     alignItems: 'center',
     marginTop: 10,
     marginBottom: 20,
+  },
+  h1Form: {
+    fontSize: 40,
   },
   welcomeImage: {
     width: 100,
@@ -89,5 +95,11 @@ export const styles = StyleSheet.create({
   helpLinkText: {
     fontSize: 14,
     color: '#2e78b7',
+  },
+  editSymbol: {
+    position: 'absolute',
+    right: 0,
+    zIndex: 10000,
+    padding: 3,
   },
 });
