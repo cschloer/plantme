@@ -11,7 +11,7 @@ import jwtDecoder from 'jwt-decode';
 import { connect } from 'react-redux';
 
 import { setUserProfile } from '../reducers/login';
-import { getUserPlants } from '../reducers/user_plant';
+import { getUserPlants } from '../reducers/userPlant';
 
 const styles = StyleSheet.create({
   container: {

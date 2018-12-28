@@ -10,9 +10,18 @@ export const UPDATE_USER_PLANT = 'plantme/user_plant/UPDATE_USER_PLANT';
 export const UPDATE_USER_PLANT_SUCCESS = 'plantme/user_plant/UPDATE_USER_PLANT_SUCCESS';
 export const UPDATE_USER_PLANT_FAIL = 'plantme/user_plant/UPDATE_USER_PLANT_FAIL';
 
+export const DELETE_USER_PLANT = 'plantme/user_plant/DELETE_USER_PLANT';
+export const DELETE_USER_PLANT_SUCCESS = 'plantme/user_plant/DELETE_USER_PLANT_SUCCESS';
+export const DELETE_USER_PLANT_FAIL = 'plantme/user_plant/DELETE_USER_PLANT_FAIL';
+
 export const GET_SINGLE_USER_PLANT = 'plantme/user_plant/GET_SINGLE_USER_PLANT';
 export const GET_SINGLE_USER_PLANT_SUCCESS = 'plantme/user_plant/GET_SINGLE_USER_PLANT_SUCCESS';
 export const GET_SINGLE_USER_PLANT_FAIL = 'plantme/user_plant/GET_SINGLE_USER_PLANT_FAIL';
+
+// Create user image plant image must be here in order to manipulate the state of the user plant
+export const CREATE_USER_PLANT_IMAGE = 'plantme/user_plant_image/CREATE_USER_PLANT_IMAGE';
+export const CREATE_USER_PLANT_IMAGE_SUCCESS = 'plantme/user_plant_image/CREATE_USER_PLANT_IMAGE_SUCCESS';
+export const CREATE_USER_PLANT_IMAGE_FAIL = 'plantme/user_plant_image/CREATE_USER_PLANT_IMAGE_FAIL';
 
 const defaultState = {
   plants: [],
@@ -22,9 +31,14 @@ const defaultState = {
   createPlantError: false,
   updatePlantLoading: false,
   updatePlantError: false,
+  deletePlantLoading: false,
+  deletePlantError: false,
   singlePlant: {},
   singePlantLoading: false,
   singlePlantError: false,
+
+  createUserPlantImageLoading: false,
+  createUserPlantImageError: false,
 };
 
 export default function userPlantReducer(state = defaultState, action) {
@@ -41,10 +55,9 @@ export default function userPlantReducer(state = defaultState, action) {
       return {
         ...state,
         createPlantLoading: false,
-        // create the plants object with the new created plant
+        // Update the plants object with the new plant
         plants: [...state.plants, action.payload.data],
       };
-      // return { ...state, createPlantLoading: false, plants: action.payload.data };
     case CREATE_USER_PLANT_FAIL:
       return { ...state, createPlantLoading: false, createPlantError: 'There was an error while creating a plant' };
     case UPDATE_USER_PLANT:
@@ -64,15 +77,54 @@ export default function userPlantReducer(state = defaultState, action) {
         singlePlant: (state.singlePlant.id === action.payload.data.id)
           ? action.payload.data : state.singlePlant,
       };
-      // return { ...state, updatePlantLoading: false, plants: action.payload.data };
     case UPDATE_USER_PLANT_FAIL:
       return { ...state, updatePlantLoading: false, updatePlantError: 'There was an error while updating a plant' };
+    case DELETE_USER_PLANT:
+      return { ...state, deletePlantLoading: true, deletePlantError: false };
+    case DELETE_USER_PLANT_SUCCESS:
+      return {
+        ...state,
+        deletePlantLoading: false,
+        // Update the plants object with the new deleted plant
+        plants: state.plants.filter(plant => (
+          plant.id !== action.payload.data.id
+        )),
+        // delete the single plant object with the new deleted plant if necessary
+        singlePlant: (state.singlePlant.id === action.payload.data.id)
+          ? {} : state.singlePlant,
+      };
+      // return { ...state, deletePlantLoading: false, plants: action.payload.data };
+    case DELETE_USER_PLANT_FAIL:
+      return { ...state, deletePlantLoading: false, deletePlantError: 'There was an error while deleting a plant' };
     case GET_SINGLE_USER_PLANT:
       return { ...state, singlePlantLoading: true, singlePlantError: false };
     case GET_SINGLE_USER_PLANT_SUCCESS:
       return { ...state, singlePlantLoading: false, singlePlant: action.payload.data };
     case GET_SINGLE_USER_PLANT_FAIL:
       return { ...state, singlePlantLoading: false, singlePlantError: 'There was an error while loading the plant' };
+    case CREATE_USER_PLANT_IMAGE:
+      return { ...state, createUserPlantImageLoading: true, createUserPlantImageError: false };
+    case CREATE_USER_PLANT_IMAGE_SUCCESS:
+      return {
+        ...state,
+        createUserPlantImageLoading: false,
+        // Update the plants object with the new plant image
+        plants: state.plants.map((plant) => {
+          if (plant.id === action.payload.data.user_plant_id) {
+            return {
+              ...plant,
+              images: [action.payload.data, ...plant.images],
+            };
+          }
+          return plant;
+        }),
+        // Update the single plant object with the new plant image if necessary
+        singlePlant: (state.singlePlant.id === action.payload.data.user_plant_id)
+          ? { ...state.singlePlant, images: [action.payload.data, ...state.singlePlant.images] }
+          : state.singlePlant,
+      };
+    case CREATE_USER_PLANT_IMAGE_FAIL:
+      return { ...state, createUserPlantImageLoading: false, createUserPlantImageError: 'There was an error while uploading the picture' };
     default:
       return state;
   }
@@ -115,12 +167,41 @@ export function updateUserPlant(plantId, plantForm) {
   };
 }
 
+export function deleteUserPlant(plantId) {
+  return {
+    type: DELETE_USER_PLANT,
+    payload: {
+      request: {
+        method: 'delete',
+        url: `/userplant/${plantId}`,
+      },
+    },
+  };
+}
+
 export function getSingleUserPlant(plantId) {
   return {
     type: GET_SINGLE_USER_PLANT,
     payload: {
       request: {
         url: `/userplant/${plantId}`,
+      },
+    },
+  };
+}
+
+export function createUserPlantImage(plantId, url) {
+  console.log('url', url);
+  return {
+    type: CREATE_USER_PLANT_IMAGE,
+    payload: {
+      request: {
+        method: 'post',
+        url: '/userplantimage/',
+        data: {
+          user_plant_id: plantId,
+          url,
+        },
       },
     },
   };

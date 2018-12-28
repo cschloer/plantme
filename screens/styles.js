@@ -1,5 +1,4 @@
 import {
-  Platform,
   StyleSheet,
 } from 'react-native';
 
@@ -62,20 +61,9 @@ export const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    ...Platform.select({
-      ios: {
-        shadowColor: 'black',
-        shadowOffset: { height: -3 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-      },
-      android: {
-        elevation: 20,
-      },
-    }),
     alignItems: 'center',
-    backgroundColor: '#fbfbfb',
-    paddingVertical: 20,
+    backgroundColor: 'rgba(225, 225, 225, 0)',
+
   },
   tabBarInfoText: {
     fontSize: 17,
@@ -99,6 +87,7 @@ export const styles = StyleSheet.create({
   editSymbol: {
     position: 'absolute',
     right: 0,
+    top: 0,
     zIndex: 10000,
     padding: 3,
   },
@@ -115,5 +104,13 @@ export const styles = StyleSheet.create({
   },
   listText: {
     marginBottom: 5,
-  }
+  },
+  errorContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f8d7da',
+    color: '#fff',
+    width: '100%',
+  },
 });

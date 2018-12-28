@@ -5,15 +5,19 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  ImageStore,
+  ImageEditor,
+  ActivityIndicator,
 } from 'react-native';
 import { connect } from 'react-redux';
-import { Icon } from 'expo';
+import { Icon, ImagePicker, ImageManipulator } from 'expo';
 import { Divider, Text, Input } from 'react-native-elements';
 
 import Loading from '../../components/Loading';
 import Error from '../../components/Error';
 import SavePlantDetail from './SavePlantDetail';
-import { getSingleUserPlant } from '../../reducers/user_plant';
+import { getSingleUserPlant, createUserPlantImage } from '../../reducers/userPlant';
+import { generateImageUrl } from '../../reducers/userPlantImage';
 import { styles } from '../styles';
 
 class PlantDetail extends React.Component {
@@ -21,6 +25,8 @@ class PlantDetail extends React.Component {
   state = {
     editMode: false,
     form: {},
+    imageConvertLoading: false,
+    imageConvertError: false,
   };
 
   componentDidMount() {
@@ -41,10 +47,50 @@ class PlantDetail extends React.Component {
     if (prevLoading && !nextLoading && !nextError) {
       this.setState({ editMode: false });
     }
+    const {
+      generateImageUrlLoading: nextImageLoading,
+      generateImageUrlError: nextImageError,
+    } = nextProps.userPlantImage;
+    const { generateImageUrlLoading: prevImageLoading } = this.props.userPlantImage;
+    if (prevImageLoading && !nextImageLoading && !nextImageError) {
+      const { imageUrl } = nextProps.userPlantImage;
+      const { id } = this.props.userPlant.singlePlant;
+      this.props.createUserPlantImage(id, imageUrl);
+    }
+
   }
 
+  uploadImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      aspect: [4, 3],
+    });
+
+    if (!result.cancelled) {
+      this.setState({
+        imageConvertLoading: true,
+        imageConvertError: false,
+      });
+      // Resize the image
+      const manipResult = await ImageManipulator.manipulateAsync(
+        result.uri,
+        [{ resize: { width: 600 } }],
+        { base64: true },
+      );
+      this.setState({ imageConvertLoading: false });
+      const { sub } = this.props.user;
+      const { id: plantId } = this.props.userPlant.singlePlant;
+      // Generate storage URL
+      this.props.generateImageUrl(
+        manipResult.base64,
+        `${sub}-${plantId}.jpeg`,
+        'image/jpeg',
+      );
+    }
+  };
+
   render() {
-    const { navigation, userPlant } = this.props;
+    const { navigation, userPlant, userPlantImage } = this.props;
     const { singlePlant, singlePlantLoading, singlePlantError } = userPlant;
     const plantId = navigation.getParam('plantId', false);
 
@@ -102,8 +148,14 @@ class PlantDetail extends React.Component {
     ));
 
     if (editMode) {
-      const { form } = this.state;
-      const { updatePlantLoading, updatePlantError } = userPlant;
+      const { form, imageConvertError, imageConvertLoading } = this.state;
+      const {
+        updatePlantLoading, updatePlantError,
+        createUserPlantImageLoading, createUserPlantImageError,
+      } = userPlant;
+      const {
+        generateImageUrlLoading, generateImageUrlError,
+      } = userPlantImage;
       return (
         <View style={styles.container}>
           {editButton}
@@ -125,26 +177,34 @@ class PlantDetail extends React.Component {
               <Divider style={styles.divider} />
               <TouchableOpacity
                 style={styles.addSymbol}
-                onPress={() => {
-                  console.log('Add picture resed');
-                }}
+                onPress={this.uploadImage}
+                disabled={imageConvertLoading}
               >
-                <Icon.Feather
-                  name="plus"
-                  size={64}
-                />
+                {(imageConvertLoading || createUserPlantImageLoading || generateImageUrlLoading)
+                  ? (
+                    <ActivityIndicator size={64} />
+                  ) : (
+                    <Icon.Feather
+                      name="plus"
+                      size={64}
+                    />
+
+                  )
+                }
               </TouchableOpacity>
               {imageGroup}
             </View>
           </ScrollView>
-          {updatePlantError && <Error message={updatePlantError} />}
           <View style={styles.tabBarInfoContainer}>
             <SavePlantDetail form={form} plantId={id} />
+            {updatePlantError && <Error message={updatePlantError} />}
+            {imageConvertError && <Error message={imageConvertError} />}
+            {generateImageUrlError && <Error message={generateImageUrlError} />}
+            {createUserPlantImageError && <Error message={createUserPlantImage} />}
           </View>
         </View>
       );
     }
-    console.log('images', images);
     return (
       <View style={styles.container}>
         {editButton}
@@ -175,28 +235,48 @@ class PlantDetail extends React.Component {
 PlantDetail.propTypes = {
   navigation: PropTypes.object,
   getSingleUserPlant: PropTypes.func,
+  generateImageUrl: PropTypes.func,
+  createUserPlantImage: PropTypes.func,
   userPlant: PropTypes.shape({
     singlePlant: PropTypes.shape({
       created: PropTypes.string,
       id: PropTypes.number,
       name: PropTypes.string,
       user_id: PropTypes.string,
+      images: PropTypes.arrayOf(PropTypes.shape({
+        url: PropTypes.string,
+      })),
     }),
     singlePlantLoading: PropTypes.bool,
     singlePlantError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
     updatePlantLoading: PropTypes.bool,
     updatePlantError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
+    createUserPlantImageLoading: PropTypes.bool,
+    createUserPlantImageError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
+  }),
+  userPlantImage: PropTypes.shape({
+    generateImageUrlLoading: PropTypes.bool,
+    generateImageUrlError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
+    imageUrl: PropTypes.string,
+  }),
+  user: PropTypes.shape({
+    name: PropTypes.string,
+    sub: PropTypes.string,
   }),
 };
 
 const mapStateToProps = state => {
   return {
+    user: state.login.profile,
     userPlant: state.userPlant,
+    userPlantImage: state.userPlantImage,
   };
 };
 
 const mapDispatchToProps = {
   getSingleUserPlant,
+  generateImageUrl,
+  createUserPlantImage,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(PlantDetail);

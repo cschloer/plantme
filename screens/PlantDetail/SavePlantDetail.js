@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { Button } from 'react-native-elements';
 import { connect } from 'react-redux';
 
-import { updateUserPlant } from '../../reducers/user_plant';
+import { updateUserPlant } from '../../reducers/userPlant';
 
 class SavePlantDetail extends React.Component {
 

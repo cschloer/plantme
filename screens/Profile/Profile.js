@@ -14,7 +14,7 @@ import { connect } from 'react-redux';
 import PlantCard from '../../components/PlantCard';
 import Loading from '../../components/Loading';
 import Error from '../../components/Error';
-import { createUserPlant } from '../../reducers/user_plant';
+import { createUserPlant } from '../../reducers/userPlant';
 import { styles } from '../styles';
 
 class Profile extends React.Component {
@@ -87,6 +87,7 @@ class Profile extends React.Component {
                 key={i}
                 plant={plant}
                 navigation={this.props.navigation}
+                deletable
               />
             ))
           }
@@ -111,8 +112,12 @@ class Profile extends React.Component {
               )
             }
           </TouchableOpacity>
-          {createPlantError && <Error message={createPlantError} />}
         </ScrollView>
+        {createPlantError && (
+          <View style={styles.tabBarInfoContainer}>
+            <Error message={createPlantError} />
+          </View>
+        )}
       </View>
     );
   }
