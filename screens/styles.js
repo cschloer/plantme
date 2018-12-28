@@ -102,4 +102,18 @@ export const styles = StyleSheet.create({
     zIndex: 10000,
     padding: 3,
   },
+  addSymbol: {
+    marginLeft: 'auto',
+    marginRight: 'auto',
+  },
+  imageGroupView: {
+    marginTop: 10,
+  },
+  divider: {
+    marginTop: 2,
+    marginBottom: 2,
+  },
+  listText: {
+    marginBottom: 5,
+  }
 });

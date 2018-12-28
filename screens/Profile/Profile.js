@@ -1,17 +1,20 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {
+  ActivityIndicator,
+  AsyncStorage,
   ScrollView,
   Text,
+  TouchableOpacity,
   View,
-  AsyncStorage,
 } from 'react-native';
-import { WebBrowser } from 'expo';
+import { WebBrowser, Icon } from 'expo';
 import { connect } from 'react-redux';
 
 import PlantCard from '../../components/PlantCard';
 import Loading from '../../components/Loading';
 import Error from '../../components/Error';
+import { createUserPlant } from '../../reducers/user_plant';
 import { styles } from '../styles';
 
 class Profile extends React.Component {
@@ -61,13 +64,16 @@ class Profile extends React.Component {
   };
 
   render() {
-    const { loading, error, plants } = this.props.userPlant;
-    if (error) {
+    const { 
+      plantsLoading, plantsError, plants,
+      createPlantLoading, createPlantError,
+    } = this.props.userPlant;
+    if (plantsError) {
       return (
-        <Error message={error} />
+        <Error message={plantsError} />
       );
     }
-    if (loading) {
+    if (plantsLoading) {
       return (
         <Loading />
       );
@@ -84,6 +90,28 @@ class Profile extends React.Component {
               />
             ))
           }
+          <TouchableOpacity
+            style={styles.addSymbol}
+            onPress={() => {
+              this.props.createUserPlant({
+                user_id: this.props.user.sub,
+                name: 'new plant',
+              });
+            }}
+            disabled={createPlantLoading}
+          >
+            {createPlantLoading
+              ? (
+                <ActivityIndicator size={64} />
+              ) : (
+                <Icon.Feather
+                  name="plus"
+                  size={64}
+                />
+              )
+            }
+          </TouchableOpacity>
+          {createPlantError && <Error message={createPlantError} />}
         </ScrollView>
       </View>
     );
@@ -96,11 +124,14 @@ Profile.propTypes = {
     sub: PropTypes.string,
   }),
   userPlant: PropTypes.shape({
-    loading: PropTypes.bool,
-    error: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
+    plantsLoading: PropTypes.bool,
+    plantsError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
     plants: PropTypes.array,
+    createPlantLoading: PropTypes.bool,
+    createPlantError: PropTypes.bool,
   }),
   navigation: PropTypes.object,
+  createUserPlant: PropTypes.func,
 };
 
 const mapStateToProps = state => {
@@ -110,4 +141,8 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect(mapStateToProps, null)(Profile);
+const mapDispatchToProps = {
+  createUserPlant,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Profile);

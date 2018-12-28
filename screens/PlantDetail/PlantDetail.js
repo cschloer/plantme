@@ -4,13 +4,15 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { connect } from 'react-redux';
 import { Icon } from 'expo';
-import { Text, Input, Button } from 'react-native-elements';
+import { Divider, Text, Input } from 'react-native-elements';
 
 import Loading from '../../components/Loading';
 import Error from '../../components/Error';
+import SavePlantDetail from './SavePlantDetail';
 import { getSingleUserPlant } from '../../reducers/user_plant';
 import { styles } from '../styles';
 
@@ -30,6 +32,17 @@ class PlantDetail extends React.Component {
     }
   }
 
+  componentWillReceiveProps(nextProps) {
+    const {
+      updatePlantLoading: nextLoading,
+      updatePlantError: nextError,
+    } = nextProps.userPlant;
+    const { updatePlantLoading: prevLoading } = this.props.userPlant;
+    if (prevLoading && !nextLoading && !nextError) {
+      this.setState({ editMode: false });
+    }
+  }
+
   render() {
     const { navigation, userPlant } = this.props;
     const { singlePlant, singlePlantLoading, singlePlantError } = userPlant;
@@ -45,7 +58,12 @@ class PlantDetail extends React.Component {
         <Loading />
       );
     }
-    const { created, id, name } = singlePlant;
+    const {
+      created,
+      id,
+      name,
+      images = [],
+    } = singlePlant;
 
     const { editMode } = this.state;
 
@@ -66,10 +84,26 @@ class PlantDetail extends React.Component {
           size={32}
         />
       </TouchableOpacity>
-    )
+    );
+
+    const imageGroup = images.map((image, i) => (
+      <View key={i}>
+        <Divider style={styles.divider} />
+        <Image
+          style={{
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            width: 200,
+            height: 200,
+          }}
+          source={{ uri: image.url }}
+        />
+      </View>
+    ));
 
     if (editMode) {
       const { form } = this.state;
+      const { updatePlantLoading, updatePlantError } = userPlant;
       return (
         <View style={styles.container}>
           {editButton}
@@ -84,20 +118,33 @@ class PlantDetail extends React.Component {
               )}
               inputStyle={styles.h1Form}
               label="name"
+              editable={!updatePlantLoading}
             />
-            <Text>Created {created}</Text>
+            <Text styles={styles.listText}>created {created}</Text>
+            <View style={styles.imageGroupView}>
+              <Divider style={styles.divider} />
+              <TouchableOpacity
+                style={styles.addSymbol}
+                onPress={() => {
+                  console.log('Add picture resed');
+                }}
+              >
+                <Icon.Feather
+                  name="plus"
+                  size={64}
+                />
+              </TouchableOpacity>
+              {imageGroup}
+            </View>
           </ScrollView>
+          {updatePlantError && <Error message={updatePlantError} />}
           <View style={styles.tabBarInfoContainer}>
-            <Button
-              containerStyle={{ width: '100%', marginLeft: 0 }}
-              title="save"
-              onPress={() => console.log('pressed')}
-              raised={false}
-            />
+            <SavePlantDetail form={form} plantId={id} />
           </View>
         </View>
       );
     }
+    console.log('images', images);
     return (
       <View style={styles.container}>
         {editButton}
@@ -105,8 +152,19 @@ class PlantDetail extends React.Component {
           style={styles.container}
           contentContainerStyle={styles.secondPageContentContainer}
         >
-          <Text h1>{name}</Text>
-          <Text>Created {created}</Text>
+          <Text h1 style={styles.listText}>{name}</Text>
+          <Text style={styles.listText}>created {created}</Text>
+          <View style={styles.imageGroupView}>
+            {images.length === 0 && (
+              <View>
+                <Divider style={styles.divider} />
+                <Text style={{ textAlign: 'center' }}>
+                  no pictures :( why not add one?
+                </Text>
+              </View>
+            )}
+            {imageGroup}
+          </View>
         </ScrollView>
       </View>
     );
@@ -124,8 +182,10 @@ PlantDetail.propTypes = {
       name: PropTypes.string,
       user_id: PropTypes.string,
     }),
-    singlePlantLoading: false,
+    singlePlantLoading: PropTypes.bool,
     singlePlantError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
+    updatePlantLoading: PropTypes.bool,
+    updatePlantError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
   }),
 };
 
