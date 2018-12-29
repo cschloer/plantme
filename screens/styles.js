@@ -84,10 +84,17 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: '#2e78b7',
   },
-  editSymbol: {
+  topRightSymbol: {
     position: 'absolute',
     right: 0,
     top: 0,
+    zIndex: 10000,
+    padding: 3,
+  },
+  bottomRightSymbol: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
     zIndex: 10000,
     padding: 3,
   },

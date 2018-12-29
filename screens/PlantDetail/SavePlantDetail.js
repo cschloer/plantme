@@ -1,48 +1,37 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Button } from 'react-native-elements';
+import {
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
+import { Icon } from 'expo';
 import { connect } from 'react-redux';
 
 import { updateUserPlant } from '../../reducers/userPlant';
 
 class SavePlantDetail extends React.Component {
 
-  // Render any loading content that you like here
   render() {
-    const { updatePlantLoading } = this.props.userPlant;
-    if (updatePlantLoading) {
-      return (
-        <Button
-          loading
-          loadingProps={{ size: 'large', color: 'rgba(111, 202, 186, 1)' }}
-          titleStyle={{ fontWeight: '700' }}
-          buttonStyle={{
-            width: 300,
-            height: 45,
-            borderColor: 'transparent',
-            borderWidth: 0,
-            borderRadius: 5,
-          }}
-        />
-      );
-
-    }
     const { plantId, form } = this.props;
+    const { updatePlantLoading } = this.props.userPlant;
     return (
-      <Button
-        buttonStyle={{
-          width: 300,
-          height: 45,
-          borderColor: 'transparent',
-          borderWidth: 0,
-          borderRadius: 5,
-        }}
-        titleStyle={{ fontWeight: '700' }}
-        title="save"
+      <TouchableOpacity
         onPress={() => {
           this.props.updateUserPlant(plantId, form);
         }}
-      />
+        style={{ marginRight: 8 }}
+      >
+        {updatePlantLoading
+          ? <ActivityIndicator size={32} />
+          : (
+            <Icon.Feather
+              name="save"
+              size={32}
+              color="green"
+            />
+          )
+        }
+      </TouchableOpacity>
     );
   }
 }

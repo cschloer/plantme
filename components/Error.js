@@ -29,7 +29,7 @@ class Error extends React.Component {
           onPress={() => {
             this.setState({ display: false });
           }}
-          style={styles.editSymbol}
+          style={styles.topRightSymbol}
         >
           <Icon.Feather
             name="x"

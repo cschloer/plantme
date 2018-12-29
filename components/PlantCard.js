@@ -1,23 +1,20 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {
-  Text,
   TouchableOpacity,
-  Alert,
   Image,
 } from 'react-native';
 import { Card } from 'react-native-elements';
-import { Icon } from 'expo';
 import { connect } from 'react-redux';
 
-import { styles } from '../screens/styles';
+import DeleteButton from './DeleteButton';
 import { deleteUserPlant } from '../reducers/userPlant';
 
 
 class PlantCard extends React.Component {
 
   render() {
-    const { name, created, id, images } = this.props.plant;
+    const { name, id, images } = this.props.plant;
     const { deletable } = this.props;
     return (
       <TouchableOpacity
@@ -32,30 +29,11 @@ class PlantCard extends React.Component {
           title={name}
         >
           {deletable && (
-            <TouchableOpacity
-              onPress={() => {
-                Alert.alert(
-                  'delete plant',
-                  'Are you sure you want to delete this plant?',
-                  [
-                    {
-                      text: 'yes',
-                      onPress: () => {
-                        this.props.deleteUserPlant(id);
-                      },
-                    },
-                    { text: 'no', onPress: null },
-                  ],
-                  { cancelable: true }
-                );
-              }}
-              style={styles.editSymbol}
-            >
-              <Icon.Feather
-                name="x"
-                size={16}
-              />
-            </TouchableOpacity>
+            <DeleteButton
+              deleteFunc={() => this.props.deleteUserPlant(id)}
+              alertTitle="delete plant"
+              alertText="Are you sure you want to delete this plant?"
+            />
           )}
           {(images.length !== 0) && (
             <Image

@@ -5,19 +5,21 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  ImageStore,
-  ImageEditor,
   ActivityIndicator,
 } from 'react-native';
 import { connect } from 'react-redux';
-import { Icon, ImagePicker, ImageManipulator } from 'expo';
+import {
+  Icon, ImagePicker, ImageManipulator,
+  Permissions,
+} from 'expo';
 import { Divider, Text, Input } from 'react-native-elements';
 
 import Loading from '../../components/Loading';
 import Error from '../../components/Error';
+import DeleteButton from '../../components/DeleteButton';
 import SavePlantDetail from './SavePlantDetail';
-import { getSingleUserPlant, createUserPlantImage } from '../../reducers/userPlant';
-import { generateImageUrl } from '../../reducers/userPlantImage';
+import { getSingleUserPlant } from '../../reducers/userPlant';
+import { generateImageUrl, createUserPlantImage, deleteUserPlantImage } from '../../reducers/userPlantImage';
 import { styles } from '../styles';
 
 class PlantDetail extends React.Component {
@@ -60,11 +62,33 @@ class PlantDetail extends React.Component {
 
   }
 
-  uploadImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      allowsEditing: true,
-      aspect: [4, 3],
-    });
+  uploadImage = async (camera) => {
+    let result = null;
+    if (camera) {
+      const { status } = await Permissions.askAsync(
+        Permissions.CAMERA, Permissions.CAMERA_ROLL
+      );
+      if (status !== 'granted') {
+        return;
+      }
+      result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [4, 3],
+      });
+
+    } else {
+      const { status } = await Permissions.askAsync(
+        Permissions.CAMERA_ROLL
+      );
+      if (status !== 'granted') {
+        return;
+      }
+      result = await ImagePicker.launchImageLibraryAsync({
+        allowsEditing: true,
+        aspect: [4, 3],
+        mediaTypes: 'Images',
+      });
+    }
 
     if (!result.cancelled) {
       this.setState({
@@ -74,7 +98,7 @@ class PlantDetail extends React.Component {
       // Resize the image
       const manipResult = await ImageManipulator.manipulateAsync(
         result.uri,
-        [{ resize: { width: 600 } }],
+        [{ resize: { width: 900 } }],
         { base64: true },
       );
       this.setState({ imageConvertLoading: false });
@@ -91,7 +115,28 @@ class PlantDetail extends React.Component {
 
   render() {
     const { navigation, userPlant, userPlantImage } = this.props;
-    const { singlePlant, singlePlantLoading, singlePlantError } = userPlant;
+
+    const {
+      updatePlantLoading, updatePlantError,
+      singlePlant, singlePlantLoading, singlePlantError,
+    } = userPlant;
+
+    const {
+      generateImageUrlLoading, generateImageUrlError,
+      createUserPlantImageLoading, createUserPlantImageError,
+      deleteUserPlantImageLoading, deleteUserPlantImageError,
+    } = userPlantImage;
+
+    const {
+      created, id, name,
+      images = [],
+    } = singlePlant;
+
+    const {
+      editMode, form,
+      imageConvertError, imageConvertLoading,
+    } = this.state;
+
     const plantId = navigation.getParam('plantId', false);
 
     if (singlePlantError || !plantId) {
@@ -104,18 +149,9 @@ class PlantDetail extends React.Component {
         <Loading />
       );
     }
-    const {
-      created,
-      id,
-      name,
-      images = [],
-    } = singlePlant;
-
-    const { editMode } = this.state;
 
     const editButton = (
       <TouchableOpacity
-        style={styles.editSymbol}
         onPress={() => {
           this.setState({
             editMode: !editMode,
@@ -144,21 +180,30 @@ class PlantDetail extends React.Component {
           }}
           source={{ uri: image.url }}
         />
+        {editMode && (
+          deleteUserPlantImageLoading
+            ? <ActivityIndicator style={styles.topRightSymbol} size={16} />
+            : (
+              <DeleteButton
+                deleteFunc={() => this.props.deleteUserPlantImage(image.id)}
+                alertTitle="delete picture"
+                alertText="Are you sure you want to delete this picture?"
+              />
+            )
+        )}
       </View>
     ));
 
     if (editMode) {
-      const { form, imageConvertError, imageConvertLoading } = this.state;
-      const {
-        updatePlantLoading, updatePlantError,
-        createUserPlantImageLoading, createUserPlantImageError,
-      } = userPlant;
-      const {
-        generateImageUrlLoading, generateImageUrlError,
-      } = userPlantImage;
       return (
         <View style={styles.container}>
-          {editButton}
+          <View style={[styles.topRightSymbol, { flexDirection: 'row' }]}>
+            <SavePlantDetail
+              form={form}
+              plantId={id}
+            />
+            {editButton}
+          </View>
           <ScrollView
             style={styles.container}
             contentContainerStyle={styles.secondPageContentContainer}
@@ -175,39 +220,56 @@ class PlantDetail extends React.Component {
             <Text styles={styles.listText}>created {created}</Text>
             <View style={styles.imageGroupView}>
               <Divider style={styles.divider} />
-              <TouchableOpacity
-                style={styles.addSymbol}
-                onPress={this.uploadImage}
-                disabled={imageConvertLoading}
-              >
-                {(imageConvertLoading || createUserPlantImageLoading || generateImageUrlLoading)
-                  ? (
-                    <ActivityIndicator size={64} />
-                  ) : (
-                    <Icon.Feather
-                      name="plus"
-                      size={64}
-                    />
+              {(imageConvertLoading || createUserPlantImageLoading || generateImageUrlLoading)
+                ? <ActivityIndicator size={64} />
+                : (
+                  <View style={[styles.addSymbol, { flexDirection: 'row' }]}>
+                    <TouchableOpacity
+                      onPress={() => { this.uploadImage(true); }}
+                      disabled={imageConvertLoading}
+                      style={{ marginHorizontal: 4 }}
+                    >
+                      <Icon.MaterialIcons
+                        name="camera-alt"
+                        size={64}
+                        color="green"
+                      />
 
-                  )
-                }
-              </TouchableOpacity>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => { this.uploadImage(false); }}
+                      disabled={imageConvertLoading}
+                      style={{ marginHorizontal: 4 }}
+                    >
+                      <Icon.MaterialIcons
+                        name="photo-library"
+                        size={64}
+                        color="green"
+                      />
+
+                    </TouchableOpacity>
+                  </View>
+
+                )
+              }
               {imageGroup}
             </View>
           </ScrollView>
           <View style={styles.tabBarInfoContainer}>
-            <SavePlantDetail form={form} plantId={id} />
             {updatePlantError && <Error message={updatePlantError} />}
             {imageConvertError && <Error message={imageConvertError} />}
             {generateImageUrlError && <Error message={generateImageUrlError} />}
-            {createUserPlantImageError && <Error message={createUserPlantImage} />}
+            {createUserPlantImageError && <Error message={createUserPlantImageError} />}
+            {deleteUserPlantImageError && <Error message={deleteUserPlantImageError} />}
           </View>
         </View>
       );
     }
     return (
       <View style={styles.container}>
-        {editButton}
+        <View style={styles.topRightSymbol}>
+          {editButton}
+        </View>
         <ScrollView
           style={styles.container}
           contentContainerStyle={styles.secondPageContentContainer}
@@ -237,6 +299,7 @@ PlantDetail.propTypes = {
   getSingleUserPlant: PropTypes.func,
   generateImageUrl: PropTypes.func,
   createUserPlantImage: PropTypes.func,
+  deleteUserPlantImage: PropTypes.func,
   userPlant: PropTypes.shape({
     singlePlant: PropTypes.shape({
       created: PropTypes.string,
@@ -251,10 +314,10 @@ PlantDetail.propTypes = {
     singlePlantError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
     updatePlantLoading: PropTypes.bool,
     updatePlantError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
-    createUserPlantImageLoading: PropTypes.bool,
-    createUserPlantImageError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
   }),
   userPlantImage: PropTypes.shape({
+    createUserPlantImageLoading: PropTypes.bool,
+    createUserPlantImageError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
     generateImageUrlLoading: PropTypes.bool,
     generateImageUrlError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
     imageUrl: PropTypes.string,
@@ -277,6 +340,7 @@ const mapDispatchToProps = {
   getSingleUserPlant,
   generateImageUrl,
   createUserPlantImage,
+  deleteUserPlantImage,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(PlantDetail);

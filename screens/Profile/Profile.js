@@ -64,7 +64,7 @@ class Profile extends React.Component {
   };
 
   render() {
-    const { 
+    const {
       plantsLoading, plantsError, plants,
       createPlantLoading, createPlantError,
     } = this.props.userPlant;
