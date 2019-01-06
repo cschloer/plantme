@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "plantme",
-    "description": "A very interesting project.",
-    "slug": "plantme",
+    "name": "treemap",
+    "description": "A GPS map of trees around the world.",
+    "slug": "treemap",
     "privacy": "public",
     "sdkVersion": "31.0.0",
     "platforms": ["ios", "android"],

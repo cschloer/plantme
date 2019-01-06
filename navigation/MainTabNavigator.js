@@ -6,8 +6,23 @@ import TabBarIcon from './TabBarIcon';
 import Profile from '../screens/Profile/Profile';
 import PlantDetail from '../screens/PlantDetail/PlantDetail';
 import Home from '../screens/Home/Home';
+import Map from '../screens/Map/Map';
 import LinksScreen from '../screens/LinksScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+
+const MapStack = createStackNavigator({
+  Map,
+});
+
+MapStack.navigationOptions = {
+  tabBarLabel: 'Map',
+  tabBarIcon: ({ focused }) => (
+    <TabBarIcon
+      focused={focused}
+      name={Platform.OS === 'ios' ? 'ios-map' : 'md-map'}
+    />
+  ),
+};
 
 const ProfileStack = createStackNavigator(
   {
@@ -76,6 +91,7 @@ SettingsStack.navigationOptions = {
 };
 
 export default createBottomTabNavigator({
+  MapStack,
   ProfileStack,
   HomeStack,
   LinksStack,

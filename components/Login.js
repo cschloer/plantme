@@ -26,8 +26,8 @@ import { getUserPlants } from '../reducers/userPlant';
   to see what URL to add if the above is confusing.
   If you use Facebook through Auth0, be sure to follow this guide: https://auth0.com/docs/connections/social/facebook
 */
-const auth0ClientId = 'yljrhMZzY73j2BsnGYlP6KiC34tH5qdQ';
-const auth0Domain = 'https://plantme.auth0.com';
+const auth0ClientId = '8wrsnEvmPcfkC6kzsXw36x9GsPyKcAnA';
+const auth0Domain = 'https://treemap.auth0.com';
 
 /**
  * Converts an object to a query string.
@@ -62,13 +62,14 @@ class Login extends React.Component {
       client_id: auth0ClientId,
       response_type: 'id_token',
       scope: 'openid email profile',
-      audience: 'https://plantme.auth0.com/api/v2/',
+      audience: 'https://treemap.auth0.com/api/v2/',
       nonce: await this.getNonce(),
       redirect_uri: redirectUrl,
     });
     const result = await AuthSession.startAsync({
       authUrl: `${auth0Domain}/authorize${queryString}`,
     });
+    console.log('result', result);
 
     if (result.type === 'success') {
       this.handleParams(result.params);
@@ -109,6 +110,7 @@ class Login extends React.Component {
     });
     this.props.getUserPlants(sub);
     await AsyncStorage.setItem('userToken', encodedToken);
+    console.log('navigiating to app');
     this.props.navigation.navigate('App');
   }
 

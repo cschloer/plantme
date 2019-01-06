@@ -91,6 +91,14 @@ export const styles = StyleSheet.create({
     zIndex: 10000,
     padding: 3,
   },
+  refreshMap: {
+    position: 'absolute',
+    right: 0,
+    top: 5,
+    zIndex: 10000,
+    padding: 3,
+    paddingTop: 20,
+  },
   bottomRightSymbol: {
     position: 'absolute',
     right: 0,

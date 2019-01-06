@@ -2,7 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {
   Button,
-  FlatList,
   Image,
   ScrollView,
   Text,
@@ -15,6 +14,7 @@ import { connect } from 'react-redux';
 
 import { MonoText } from '../../components/StyledText';
 import { styles } from '../styles';
+import { logoutUser } from '../../reducers/login';
 
 class Home extends React.Component {
   static navigationOptions = {
@@ -23,7 +23,8 @@ class Home extends React.Component {
 
   signOutAsync = async () => {
     await AsyncStorage.clear();
-    this.props.navigation.navigate('Auth');
+    this.props.logoutUser();
+    // this.props.navigation.navigate('App');
   };
 
 
@@ -63,6 +64,7 @@ class Home extends React.Component {
   };
 
   render() {
+    console.log('user', this.props.user);
     return (
       <View style={styles.container}>
         <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
@@ -103,7 +105,14 @@ class Home extends React.Component {
         </ScrollView>
 
         <View style={styles.tabBarInfoContainer}>
-          <Button title="Actually, sign me out :)" onPress={this.signOutAsync} />
+          {this.props.user.sub
+            ? (
+              <Button title="Actually, sign me out :)" onPress={this.signOutAsync} />
+            )
+            : (
+              <Button title="Sign me in!!" onPress={() => this.props.navigation.navigate('Auth')} />
+            )
+          }
         </View>
       </View>
     );
@@ -118,6 +127,7 @@ Home.propTypes = {
     sub: PropTypes.string,
   }),
   navigation: PropTypes.object,
+  logoutUser: PropTypes.func,
 };
 
 const mapStateToProps = state => {
@@ -126,4 +136,8 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect(mapStateToProps, null)(Home);
+const mapDispatchToProps = {
+  logoutUser,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Home);
