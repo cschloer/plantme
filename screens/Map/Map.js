@@ -5,9 +5,9 @@ import { connect } from 'react-redux';
 import {
   View,
   TouchableOpacity,
+  Button,
 } from 'react-native';
 
-import Loading from '../../components/Loading';
 import Error from '../../components/Error';
 
 import { getTrees } from '../../reducers/tree';
@@ -18,10 +18,24 @@ class Map extends React.Component {
     header: null,
   };
 
+  state = {
+    createTreeButton: false,
+    latitude: null,
+    longitude: null,
+  }
+
   componentDidMount = () => {
     if (this.props.tree.trees.length === 0) {
       this.getPlants();
     }
+  }
+
+  clearCreateTreeButton = () => {
+    this.setState({ 
+      createTreeButton: false,
+      latitude: null,
+      longitude: null,
+    });
   }
 
   getPlants = () => {
@@ -30,9 +44,11 @@ class Map extends React.Component {
 
   render() {
     const {
+      createTreeButton, latitude, longitude
+    } = this.state;
+    const {
       trees, treesError, treesLoading,
     } = this.props.tree;
-    console.log(trees);
     if (treesError) {
       return (
         <Error message={treesError} />
@@ -48,7 +64,15 @@ class Map extends React.Component {
             latitudeDelta: 0.0411,
             longitudeDelta: 0.0210,
           }}
-          onPress={e => { console.log('coord', e.nativeEvent); }}
+          onPress={e => {
+            console.log('ON PRES');
+            const { latitude: lat, longitude: lon } = e.nativeEvent.coordinate;
+            this.setState({
+              createTreeButton: true,
+              latitude: lat,
+              longitude: lon,
+            });
+          }}
         >
           {trees.map((tree, i) => {
             if (tree.locations.length === 0) {
@@ -65,17 +89,31 @@ class Map extends React.Component {
             }
             return (
               <MapView.Marker
-                key={i}
+                key={`${loc.longitude}-${loc.longitude}-created-${i}`}
                 coordinate={{
                   latitude: loc.latitude,
                   longitude: loc.longitude,
                 }}
                 title={species.name}
                 description={species.description}
+                onPress={this.clearCreateTreeButton}
+                pinColor="green"
               />
             );
           })}
-
+          {createTreeButton && (
+            <MapView.Marker
+              key={`${longitude}-${longitude}`}
+              coordinate={{
+                latitude,
+                longitude,
+              }}
+              title="A new tree!"
+              pinColor="blue"
+            >
+              <MapView.Callout tooltip />
+            </MapView.Marker>
+          )}
         </MapView>
         <TouchableOpacity
           onPress={this.getPlants}
@@ -87,6 +125,31 @@ class Map extends React.Component {
             size={32}
           />
         </TouchableOpacity>
+        {createTreeButton && (
+          <View style={styles.createTreeButton}>
+            {this.props.user.sub
+              ? (
+                <Button
+                  title="Create a tree here"
+                  onPress={() => this.props.navigation.navigate(
+                    'TreeForm',
+                    {
+                      latitude,
+                      longitude,
+                      onReturn: this.clearCreateTreeButton,
+                    },
+                  )}
+                />
+              )
+              : (
+                <Button
+                  title="You must be signed in to add a tree!"
+                  onPress={() => this.props.navigation.navigate('Auth')}
+                />
+              )
+            }
+          </View>
+        )}
       </View>
     );
   }
@@ -97,7 +160,15 @@ Map.propTypes = {
     name: PropTypes.string,
     sub: PropTypes.string,
   }),
-  tree: PropTypes.object,
+  navigation: PropTypes.object,
+  tree: PropTypes.shape({
+    trees: PropTypes.arrayOf(PropTypes.shape({
+      locations: PropTypes.array,
+      species_votes: PropTypes.array,
+    })),
+    treesLoading: PropTypes.bool,
+    treesError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
+  }),
   getTrees: PropTypes.func,
 };
 

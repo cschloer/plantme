@@ -7,12 +7,19 @@ import Profile from '../screens/Profile/Profile';
 import PlantDetail from '../screens/PlantDetail/PlantDetail';
 import Home from '../screens/Home/Home';
 import Map from '../screens/Map/Map';
+import TreeForm from '../screens/Map/TreeForm';
 import LinksScreen from '../screens/LinksScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
-const MapStack = createStackNavigator({
-  Map,
-});
+const MapStack = createStackNavigator(
+  {
+    Map,
+    TreeForm,
+  },
+  {
+    initialRouteName: 'Map',
+  },
+);
 
 MapStack.navigationOptions = {
   tabBarLabel: 'Map',
