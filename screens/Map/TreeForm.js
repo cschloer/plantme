@@ -56,14 +56,8 @@ class TreeForm extends React.Component {
 
     this.props.createTree({
       user_id,
-      locations: [{
-        user_id,
-        latitude,
-        longitude,
-        votes: [{
-          user_id,
-        }],
-      }],
+      latitude,
+      longitude,
       species_votes: [{
         user_id,
         species_id: species.id,
@@ -128,11 +122,11 @@ class TreeForm extends React.Component {
                 />
               )
             }
-            {createTreeError && (
-              <Error message={createTreeError} />
-            )}
           </View>
         )}
+        <View style={styles.tabBarInfoContainer}>
+          {createTreeError && <Error message={createTreeError} />}
+        </View>
       </View>
     );
   }
@@ -150,7 +144,7 @@ TreeForm.propTypes = {
   }),
   tree: PropTypes.shape({
     createTreeLoading: PropTypes.bool,
-    createTreeError: PropTypes.bool,
+    createTreeError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
   }),
   navigation: PropTypes.object,
   getSpecies: PropTypes.func,

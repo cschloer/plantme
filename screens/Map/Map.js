@@ -20,8 +20,8 @@ class Map extends React.Component {
 
   state = {
     createTreeButton: false,
-    latitude: null,
-    longitude: null,
+    createTreeLatitude: null,
+    createTreeLongitude: null,
   }
 
   componentDidMount = () => {
@@ -31,10 +31,10 @@ class Map extends React.Component {
   }
 
   clearCreateTreeButton = () => {
-    this.setState({ 
+    this.setState({
       createTreeButton: false,
-      latitude: null,
-      longitude: null,
+      createTreeLatitude: null,
+      createTreeLongitude: null,
     });
   }
 
@@ -44,7 +44,9 @@ class Map extends React.Component {
 
   render() {
     const {
-      createTreeButton, latitude, longitude
+      createTreeButton,
+      createTreeLatitude,
+      createTreeLongitude,
     } = this.state;
     const {
       trees, treesError, treesLoading,
@@ -66,19 +68,16 @@ class Map extends React.Component {
           }}
           onPress={e => {
             console.log('ON PRES');
-            const { latitude: lat, longitude: lon } = e.nativeEvent.coordinate;
+            const { latitude, longitude } = e.nativeEvent.coordinate;
             this.setState({
               createTreeButton: true,
-              latitude: lat,
-              longitude: lon,
+              createTreeLatitude: latitude,
+              createTreeLongitude: longitude,
             });
           }}
         >
           {trees.map((tree, i) => {
-            if (tree.locations.length === 0) {
-              return null;
-            }
-            const [loc] = tree.locations;
+            const { latitude, longitude } = tree;
             let species = {
               name: 'Unknown species',
               description: 'Can you help identify this species?',
@@ -89,10 +88,10 @@ class Map extends React.Component {
             }
             return (
               <MapView.Marker
-                key={`${loc.longitude}-${loc.longitude}-created-${i}`}
+                key={`${latitude}-${longitude}-created-${i}`}
                 coordinate={{
-                  latitude: loc.latitude,
-                  longitude: loc.longitude,
+                  latitude,
+                  longitude,
                 }}
                 title={species.name}
                 description={species.description}
@@ -103,10 +102,10 @@ class Map extends React.Component {
           })}
           {createTreeButton && (
             <MapView.Marker
-              key={`${longitude}-${longitude}`}
+              key={`${createTreeLatitude}-${createTreeLongitude}`}
               coordinate={{
-                latitude,
-                longitude,
+                latitude: createTreeLatitude,
+                longitude: createTreeLongitude,
               }}
               title="A new tree!"
               pinColor="blue"
@@ -134,8 +133,8 @@ class Map extends React.Component {
                   onPress={() => this.props.navigation.navigate(
                     'TreeForm',
                     {
-                      latitude,
-                      longitude,
+                      latitude: createTreeLatitude,
+                      longitude: createTreeLongitude,
                       onReturn: this.clearCreateTreeButton,
                     },
                   )}
@@ -163,7 +162,8 @@ Map.propTypes = {
   navigation: PropTypes.object,
   tree: PropTypes.shape({
     trees: PropTypes.arrayOf(PropTypes.shape({
-      locations: PropTypes.array,
+      latitude: PropTypes.number,
+      longitude: PropTypes.number,
       species_votes: PropTypes.array,
     })),
     treesLoading: PropTypes.bool,
