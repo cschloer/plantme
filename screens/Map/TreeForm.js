@@ -1,16 +1,19 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { MapView, Icon } from 'expo';
 import { connect } from 'react-redux';
 import {
   View,
   Button,
   Picker,
-  ActivityIndicator
+  ActivityIndicator,
 } from 'react-native';
+
+import { Divider, Text } from 'react-native-elements';
 
 import Error from '../../components/Error';
 import Loading from '../../components/Loading';
+import UploadImage from '../../components/UploadImage';
+import Carousel from '../../components/Carousel';
 
 import { getSpecies } from '../../reducers/species';
 import { createTree } from '../../reducers/tree';
@@ -22,13 +25,18 @@ class TreeForm extends React.Component {
   };
 
   state = {
-    species: {},
+    chosenSpecies: {},
+    images: [],
   }
 
   componentDidMount() {
     const { speciesList, speciesLoading } = this.props.species;
-    if (speciesList.length === 0 && !speciesLoading) {
-      this.props.getSpecies();
+    if (!speciesLoading) {
+      if (speciesList.length === 0) {
+        this.props.getSpecies();
+      } else {
+        this.setState({ chosenSpecies: speciesList[0] });
+      }
     }
   }
 
@@ -44,6 +52,19 @@ class TreeForm extends React.Component {
         'Map',
       );
     }
+
+    const {
+      speciesLoading: nextSpeciesLoading,
+      speciesError: nextSpeciesError,
+      speciesList,
+    } = nextProps.species;
+    const { speciesLoading: prevSpeciesLoading } = this.props.species;
+    if (
+      prevSpeciesLoading && !nextSpeciesLoading && !nextSpeciesError
+      && speciesList.length > 0
+    ) {
+      this.setState({ chosenSpecies: speciesList[0] });
+    }
   }
 
   createTree = () => {
@@ -52,7 +73,7 @@ class TreeForm extends React.Component {
     /* eslint-enable camelcase */
     const longitude = this.props.navigation.getParam('longitude', false);
     const latitude = this.props.navigation.getParam('latitude', false);
-    const { species } = this.state;
+    const { chosenSpecies, images } = this.state;
 
     this.props.createTree({
       user_id,
@@ -60,20 +81,28 @@ class TreeForm extends React.Component {
       longitude,
       species_votes: [{
         user_id,
-        species_id: species.id,
+        species_id: chosenSpecies.id,
       }],
+      images: images.map(image => {
+        return {
+          url: image,
+          user_id,
+        };
+      }),
     });
   }
 
   render() {
+    const { images } = this.state;
     const {
       speciesList, speciesLoading, speciesError,
     } = this.props.species;
     const {
       createTreeLoading, createTreeError,
     } = this.props.tree;
-    console.log('error', speciesError);
-    console.log('loading', speciesLoading);
+    const {
+      generateImageUrlError,
+    } = this.props.treeImage;
     if (speciesError) {
       return <Error message={speciesError} />;
     }
@@ -83,7 +112,7 @@ class TreeForm extends React.Component {
           ? <Loading />
           : (
             <Picker
-              selectedValue={this.state.species.id}
+              selectedValue={this.state.chosenSpecies.id}
               onValueChange={(chosenValue) => {
                 const species = speciesList.reduce((acc, speciesDict) => {
                   if (!acc && speciesDict.id === chosenValue) {
@@ -91,16 +120,10 @@ class TreeForm extends React.Component {
                   }
                   return acc;
                 }, null);
-                this.setState({ species });
+                this.setState({ chosenSpecies: species });
               }}
+              prompt="Select a species"
             >
-              {/*
-                TODO: remove this picker if a species has been selected
-              */}
-              <Picker.Item
-                label="Select a species"
-                value={{}}
-              />
               {speciesList.map(speciesDict => (
                 <Picker.Item
                   key={speciesDict.id}
@@ -111,8 +134,21 @@ class TreeForm extends React.Component {
             </Picker>
           )
         }
-        {this.state.species.id && (
-          <View>
+        <Divider />
+        {images.length === 0 && (
+          <Text style={{ textAlign: 'center' }}>No images. Why not add one?</Text>
+        )}
+        <Carousel
+          images={images}
+        />
+        <UploadImage
+          onImageUpload={
+            imageUrl => this.setState({ images: [...images, imageUrl] })
+          }
+          size={32}
+        />
+        {this.state.chosenSpecies.id && (
+          <View style={styles.createTreeButton}>
             {createTreeLoading
               ? <ActivityIndicator size={32} />
               : (
@@ -126,11 +162,13 @@ class TreeForm extends React.Component {
         )}
         <View style={styles.tabBarInfoContainer}>
           {createTreeError && <Error message={createTreeError} />}
+          {generateImageUrlError && <Error message={generateImageUrlError} />}
         </View>
       </View>
     );
   }
 }
+// TODO: clear generateImageUrlError when you switch between screens
 
 TreeForm.propTypes = {
   user: PropTypes.shape({
@@ -146,6 +184,9 @@ TreeForm.propTypes = {
     createTreeLoading: PropTypes.bool,
     createTreeError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
   }),
+  treeImage: PropTypes.shape({
+    generateImageUrlError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
+  }),
   navigation: PropTypes.object,
   getSpecies: PropTypes.func,
   createTree: PropTypes.func,
@@ -156,6 +197,7 @@ const mapStateToProps = state => {
     user: state.login.profile,
     species: state.species,
     tree: state.tree,
+    treeImage: state.treeImage,
   };
 };
 

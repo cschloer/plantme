@@ -1,6 +1,7 @@
 import {
   StyleSheet,
 } from 'react-native';
+import { Constants } from 'expo';
 
 export const styles = StyleSheet.create({
   container: {
@@ -98,13 +99,12 @@ export const styles = StyleSheet.create({
     zIndex: 10000,
     padding: 3,
   },
-  refreshMap: {
+  topRightMap: {
     position: 'absolute',
     right: 0,
-    top: 5,
+    paddingTop: Constants.statusBarHeight,
     zIndex: 10000,
     padding: 3,
-    paddingTop: 20,
   },
   bottomRightSymbol: {
     position: 'absolute',

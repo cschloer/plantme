@@ -1,3 +1,5 @@
+import { CREATE_TREE_IMAGE_SUCCESS } from './treeImage';
+
 export const GET_TREES = 'treemap/tree/GET_TREES';
 export const GET_TREES_SUCCESS = 'treemap/tree/GET_TREES_SUCCESS';
 export const GET_TREES_FAIL = 'treemap/tree/GET_TREES_FAIL';
@@ -27,6 +29,20 @@ export default function treeReducer(state = defaultState, action) {
       return { ...state, createTreeLoading: false, trees: [...state.trees, action.payload.data] };
     case CREATE_TREE_FAIL:
       return { ...state, createTreeLoading: false, createTreeError: 'There was an error while creating a tree' };
+    case CREATE_TREE_IMAGE_SUCCESS:
+      return {
+        ...state,
+        trees: state.trees.map((tree) => {
+          if (tree.id === action.payload.data.tree_id) {
+            return {
+              ...tree,
+              images: [...tree.images, action.payload.data],
+            };
+          }
+          return tree;
+        }),
+      };
+
     default:
       return state;
   }

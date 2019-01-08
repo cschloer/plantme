@@ -1,11 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { MapView, Icon } from 'expo';
+import { MapView, Icon, Permissions } from 'expo';
 import { connect } from 'react-redux';
 import {
   View,
   TouchableOpacity,
   Button,
+  ActivityIndicator,
 } from 'react-native';
 
 import Error from '../../components/Error';
@@ -28,6 +29,11 @@ class Map extends React.Component {
     if (this.props.tree.trees.length === 0) {
       this.getPlants();
     }
+    this.getLocationPermissionAsync();
+  }
+
+  getLocationPermissionAsync = async () => {
+    await Permissions.askAsync(Permissions.LOCATION);
   }
 
   clearCreateTreeButton = () => {
@@ -67,7 +73,6 @@ class Map extends React.Component {
             longitudeDelta: 0.0210,
           }}
           onPress={e => {
-            console.log('ON PRES');
             const { latitude, longitude } = e.nativeEvent.coordinate;
             this.setState({
               createTreeButton: true,
@@ -75,6 +80,9 @@ class Map extends React.Component {
               createTreeLongitude: longitude,
             });
           }}
+          onRegionChange={this.clearCreateTreeButton}
+          showsUserLocation
+          showsMyLocationButton
         >
           {trees.map((tree, i) => {
             const { latitude, longitude } = tree;
@@ -83,8 +91,7 @@ class Map extends React.Component {
               description: 'Can you help identify this species?',
             };
             if (tree.species_votes.length > 0) {
-              // TODO: make sure either here or backend that it has th most votes
-              ([{ species }] = tree.species_votes);
+              ([[{ species }]] = tree.species_votes);
             }
             return (
               <MapView.Marker
@@ -96,6 +103,12 @@ class Map extends React.Component {
                 title={species.name}
                 description={species.description}
                 onPress={this.clearCreateTreeButton}
+                onCalloutPress={() => {
+                  this.props.navigation.navigate(
+                    'TreeDetail',
+                    { treeId: tree.id },
+                  );
+                }}
                 pinColor="green"
               />
             );
@@ -116,13 +129,20 @@ class Map extends React.Component {
         </MapView>
         <TouchableOpacity
           onPress={this.getPlants}
-          style={styles.refreshMap}
+          style={styles.topRightMap}
           disabled={treesLoading}
         >
-          <Icon.Feather
-            name="refresh-cw"
-            size={32}
-          />
+          {treesLoading
+            ? (
+              <ActivityIndicator size={32} />
+            ) : (
+              <Icon.Feather
+                name="refresh-cw"
+                size={32}
+                style={{ opacity: 0.25 }}
+              />
+            )
+          }
         </TouchableOpacity>
         {createTreeButton && (
           <View style={styles.createTreeButton}>

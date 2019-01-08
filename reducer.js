@@ -5,6 +5,7 @@ import userPlantImageReducer from './reducers/userPlantImage';
 
 import treeReducer from './reducers/tree';
 import speciesReducer from './reducers/species';
+import treeImageReducer from './reducers/treeImage';
 
 export default combineReducers({
   login: loginReducer,
@@ -12,4 +13,5 @@ export default combineReducers({
   userPlantImage: userPlantImageReducer,
   tree: treeReducer,
   species: speciesReducer,
+  treeImage: treeImageReducer,
 });
