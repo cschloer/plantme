@@ -1,11 +1,15 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Icon } from 'expo';
 import {
   View,
+  FlatList,
 } from 'react-native';
-import { Divider, Text } from 'react-native-elements';
+import {
+  Divider,
+  Text,
+  ListItem,
+} from 'react-native-elements';
 
 import Error from '../../components/Error';
 import Carousel from '../../components/Carousel';
@@ -89,34 +93,36 @@ class TreeDetail extends React.Component {
         <View style={styles.tabBarInfoContainer}>
           {generateImageUrlError && <Error message={generateImageUrlError} />}
         </View>
-        <Divider />
-        <View style={{ paddingTop: 10 }}>
-          {tree.species_votes.map((voteTally, i) => {
+        <FlatList
+          data={tree.species_votes.map(
+            (item, index) => { return { data: item, key: index.toString() }; }
+          )}
+          renderItem={({ item }) => {
+            const voteTally = item.data;
             const userVoted = voteTally.reduce((acc, vote) => (
               acc || vote.user_id === this.props.user.sub
             ), false);
-            let text = '';
+            let text = `${voteTally.length} vote${voteTally.length > 1 ? 's' : ''}`;
             if (userVoted) {
-              if (voteTally.length > 1) {
-                text = `You and ${voteTally.length - 1} other ${voteTally.length > 2 ? 'people' : 'person'} think this is a ${voteTally[0].species.name}`;
-              } else {
-                text = `You think this is a ${voteTally[0].species.name}`;
-              }
-            } else {
-              text = `${voteTally.length} ${voteTally.length > 1 ? 'people think' : 'person thinks'} this is a ${voteTally[0].species.name}`;
+              text = `${text}, including you`;
             }
             return (
-              <View style={{ flexDirection: 'row', paddingTop: 5 }} key={i}>
-                <Icon.FontAwesome
-                  name="tree"
-                  size={32}
-                  color={userVoted ? 'green' : 'black'}
+              <View>
+                <Divider />
+                <ListItem
+                  title={voteTally[0].species.name}
+                  subtitle={text}
+                  leftIcon={{
+                    name: 'tree',
+                    color: userVoted ? 'green' : 'black',
+                    type: 'font-awesome',
+                  }}
                 />
-                <Text>{text}</Text>
               </View>
             );
-          })}
-        </View>
+
+          }}
+        />
       </View>
     );
   }
