@@ -4,40 +4,32 @@ import { connect } from 'react-redux';
 import {
   View,
   Button,
-  Picker,
   ActivityIndicator,
 } from 'react-native';
+import { MapView } from 'expo';
 
 import { Divider, Text } from 'react-native-elements';
 
 import Error from '../../components/Error';
-import Loading from '../../components/Loading';
 import UploadImage from '../../components/UploadImage';
 import Carousel from '../../components/Carousel';
 
-import { getSpecies } from '../../reducers/species';
 import { createTree } from '../../reducers/tree';
 import { styles } from '../styles';
 
 class TreeForm extends React.Component {
-  static navigationOptions = {
-    title: 'add a tree',
+
+  static navigationOptions = ({ navigation }) => {
+    const { state } = navigation;
+    const title = state.params.title || 'Unknown species';
+    return {
+      title,
+    };
   };
 
   state = {
-    chosenSpecies: {},
+    chosenSpecies: null,
     images: [],
-  }
-
-  componentDidMount() {
-    const { speciesList, speciesLoading } = this.props.species;
-    if (!speciesLoading) {
-      if (speciesList.length === 0) {
-        this.props.getSpecies();
-      } else {
-        this.setState({ chosenSpecies: speciesList[0] });
-      }
-    }
   }
 
   componentWillReceiveProps(nextProps) {
@@ -52,19 +44,13 @@ class TreeForm extends React.Component {
         'Map',
       );
     }
+  }
 
-    const {
-      speciesLoading: nextSpeciesLoading,
-      speciesError: nextSpeciesError,
-      speciesList,
-    } = nextProps.species;
-    const { speciesLoading: prevSpeciesLoading } = this.props.species;
-    if (
-      prevSpeciesLoading && !nextSpeciesLoading && !nextSpeciesError
-      && speciesList.length > 0
-    ) {
-      this.setState({ chosenSpecies: speciesList[0] });
-    }
+  handleSelectSpecies = (chosenSpecies) => {
+    this.setState({ chosenSpecies });
+    this.props.navigation.setParams({
+      title: chosenSpecies.name,
+    });
   }
 
   createTree = () => {
@@ -93,61 +79,89 @@ class TreeForm extends React.Component {
   }
 
   render() {
-    const { images } = this.state;
-    const {
-      speciesList, speciesLoading, speciesError,
-    } = this.props.species;
+    const { images, chosenSpecies } = this.state;
     const {
       createTreeLoading, createTreeError,
     } = this.props.tree;
     const {
       generateImageUrlError,
     } = this.props.treeImage;
-    if (speciesError) {
-      return <Error message={speciesError} />;
+    let content = null;
+    if (!chosenSpecies) {
+      content = (
+        <View style={{ padding: 5 }}>
+          <View style={{ paddingVertical: 10 }}>
+            <Button
+              title="select a species"
+              onPress={() => this.props.navigation.navigate(
+                'SearchSpeciesModal',
+                { onSpeciesSelect: this.handleSelectSpecies },
+              )}
+              buttonStyle={{ paddingBottom: 5 }}
+            />
+          </View>
+          <View style={{ paddingTop: 10 }}>
+            <Button
+              title="identification help"
+              onPress={() => this.props.navigation.navigate(
+                'SearchSpeciesModal',
+                { onSpeciesSelect: this.handleSelectSpecies },
+              )}
+            />
+          </View>
+        </View>
+      );
+    } else {
+      content = (
+        <View style={{ padding: 5 }}>
+          {images.length === 0 && (
+            <Text style={{ textAlign: 'center' }}>No images. Why not add one?</Text>
+          )}
+          <Carousel
+            images={images}
+          />
+          <UploadImage
+            onImageUpload={
+              imageUrl => this.setState({ images: [...images, imageUrl] })
+            }
+            topRight={images.length !== 0}
+            size={32}
+          />
+        </View>
+      );
+
     }
+    const longitude = this.props.navigation.getParam('longitude', false);
+    const latitude = this.props.navigation.getParam('latitude', false);
     return (
       <View style={styles.container}>
-        {speciesLoading
-          ? <Loading />
-          : (
-            <Picker
-              selectedValue={this.state.chosenSpecies.id}
-              onValueChange={(chosenValue) => {
-                const species = speciesList.reduce((acc, speciesDict) => {
-                  if (!acc && speciesDict.id === chosenValue) {
-                    return speciesDict;
-                  }
-                  return acc;
-                }, null);
-                this.setState({ chosenSpecies: species });
+        <View style={{ height: '100%' }}>
+          <View style={{ height: '30%' }}>
+            <MapView
+              style={{ flex: 1 }}
+              initialRegion={{
+                latitude,
+                longitude,
+                latitudeDelta: 0.0011,
+                longitudeDelta: 0.005,
               }}
-              prompt="Select a species"
+              zoomEnabled={false}
+              rotateEnabled={false}
+              scrollEnabled={false}
+              showsUserLocation
             >
-              {speciesList.map(speciesDict => (
-                <Picker.Item
-                  key={speciesDict.id}
-                  label={speciesDict.name}
-                  value={speciesDict.id}
-                />
-              ))}
-            </Picker>
-          )
-        }
-        <Divider />
-        {images.length === 0 && (
-          <Text style={{ textAlign: 'center' }}>No images. Why not add one?</Text>
-        )}
-        <Carousel
-          images={images}
-        />
-        <UploadImage
-          onImageUpload={
-            imageUrl => this.setState({ images: [...images, imageUrl] })
-          }
-          size={32}
-        />
-        {this.state.chosenSpecies.id && (
+              <MapView.Marker
+                coordinate={{
+                  latitude,
+                  longitude,
+                }}
+                pinColor="blue"
+              />
+            </MapView>
+          </View>
+          {content}
+        </View>
+        {this.state.chosenSpecies && (
           <View style={styles.createTreeButton}>
             {createTreeLoading
               ? <ActivityIndicator size={32} />
@@ -175,11 +189,6 @@ TreeForm.propTypes = {
     name: PropTypes.string,
     sub: PropTypes.string,
   }),
-  species: PropTypes.shape({
-    speciesLoading: PropTypes.bool,
-    speciesError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
-    speciesList: PropTypes.array,
-  }),
   tree: PropTypes.shape({
     createTreeLoading: PropTypes.bool,
     createTreeError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
@@ -188,21 +197,18 @@ TreeForm.propTypes = {
     generateImageUrlError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
   }),
   navigation: PropTypes.object,
-  getSpecies: PropTypes.func,
   createTree: PropTypes.func,
 };
 
 const mapStateToProps = state => {
   return {
     user: state.login.profile,
-    species: state.species,
     tree: state.tree,
     treeImage: state.treeImage,
   };
 };
 
 const mapDispatchToProps = {
-  getSpecies,
   createTree,
 };
 

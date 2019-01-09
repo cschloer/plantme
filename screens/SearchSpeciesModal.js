@@ -107,11 +107,9 @@ class SearchSpeciesModal extends React.Component {
                       species={item}
                       navigation={this.props.navigation}
                       onPress={() => {
-                        console.log('On pressing!!');
                         const onSpeciesSelect = this.props.navigation.getParam('onSpeciesSelect', null);
-                        console.log('on species select,', onSpeciesSelect);
                         if (onSpeciesSelect) {
-                          onSpeciesSelect(item.id);
+                          onSpeciesSelect(item);
                         }
                         this.props.navigation.goBack();
                       }}
@@ -135,7 +133,6 @@ SearchSpeciesModal.propTypes = {
     speciesLoading: PropTypes.bool,
     speciesError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
   }),
-  onSpeciesSelect: PropTypes.func,
   navigation: PropTypes.object.isRequired,
 };
 

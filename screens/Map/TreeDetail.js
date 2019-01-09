@@ -106,7 +106,7 @@ class TreeDetail extends React.Component {
     const { species_votes: speciesVotes, images } = tree;
     return (
       <View style={styles.container}>
-        <ScrollView>
+        <View style={{ paddingTop: 5 }}>
           <Carousel
             images={images.map(image => image.url)}
           />
@@ -119,6 +119,8 @@ class TreeDetail extends React.Component {
             otherLoading={createTreeImageLoading}
             topRight={images.length !== 0}
           />
+        </View>
+        <ScrollView>
           <FlatList
             data={speciesVotes.map(
               (item, index) => { return { data: item, key: index.toString() }; }
@@ -158,7 +160,7 @@ class TreeDetail extends React.Component {
             }}
             onPress={() => this.props.navigation.navigate(
               'SearchSpeciesModal',
-              { onSpeciesSelect: (speciesId) => this.handleVote(speciesId) },
+              { onSpeciesSelect: (species) => this.handleVote(species.id) },
             )}
           />
           <View style={styles.tabBarInfoContainer}>

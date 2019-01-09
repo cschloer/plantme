@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import {
-  View, Image,
+  View, Modal,
   StyleSheet, Dimensions,
   Text,
 } from 'react-native';
 import { Constants } from 'expo';
-import SideSwipe from 'react-native-sideswipe';
+import ImageViewer from 'react-native-image-zoom-viewer';
 
 const { width } = Dimensions.get('window');
 const height = width * 0.8;
@@ -27,53 +27,68 @@ const styles = StyleSheet.create({
     zIndex: 10000,
     alignItems: 'center',
     justifyContent: 'center',
-    textAlign: 'center',
+    width: '100%',
+    backgroundColor: 'rgba(255, 255, 255, .5)',
   },
   image: {
-    width,
     height,
+    width,
   },
 });
 
 
 class Carousel extends Component {
   state = {
-    currentIndex: 0,
+    index: 0,
+    modal: false,
   }
 
   render() {
     const { images } = this.props;
     if (images && images.length) {
+      const { modal } = this.state;
+      if (modal) {
+        return (
+          <Modal
+            visible
+            transparent
+            onRequestClose={() => this.setState({ modal: false })}
+          >
+            <ImageViewer
+              imageUrls={images.map((image) => { return { url: image }; })}
+              index={this.state.index}
+              renderIndicator={(currentIndex, totalSize) => (
+                <View style={styles.textOverlay}>
+                  <Text style={{ color: 'black' }}> {currentIndex} of {totalSize} </Text>
+                </View>
+              )}
+              saveToLocalByLongPress={false}
+            />
+          </Modal>
+        );
+      }
       return (
-        <SideSwipe
-          index={this.state.currentIndex}
-          itemWidth={width}
-          style={{ width }}
-          data={images}
-          contentOffset={0}
-          onIndexChange={index => this.setState(() => ({ currentIndex: index }))}
-          renderItem={({
-            itemIndex,
-            currentIndex,
-            item,
-            animatedValue,
-          }) => (
-            <View
-              key={itemIndex}
-              index={itemIndex}
-              currentIndex={currentIndex}
-              animatedValue={animatedValue}
-            >
-              <Image
-                style={styles.image}
-                source={{ uri: item }}
-              />
+        <View
+          style={styles.image}
+        >
+          <ImageViewer
+            imageUrls={images.map((image) => {
+              return {
+                url: image,
+              };
+            })}
+            index={this.state.index}
+            onChange={index => this.setState({ index })}
+            onClick={() => this.setState({ modal: true })}
+            backgroundColor="white"
+            renderIndicator={(currentIndex, totalSize) => (
               <View style={styles.textOverlay}>
-                <Text style={{ color: 'white' }}> {itemIndex + 1} of {images.length} </Text>
+                <Text style={{ color: 'black' }}> {currentIndex} of {totalSize} </Text>
               </View>
-            </View>
-          )}
-        />
+            )}
+            saveToLocalByLongPress={false}
+          />
+        </View>
       );
     }
     return null;

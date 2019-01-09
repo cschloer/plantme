@@ -4,10 +4,13 @@ import {
   View,
   TouchableOpacity,
   ActivityIndicator,
+  ImageEditor,
+  ImageStore,
+  Platform,
 } from 'react-native';
 import { connect } from 'react-redux';
 import {
-  Icon, ImagePicker, ImageManipulator,
+  Icon, ImagePicker,
   Permissions,
 } from 'expo';
 
@@ -58,47 +61,67 @@ class UploadImage extends React.Component {
       result = await ImagePicker.launchImageLibraryAsync({
         allowsEditing: true,
         mediaTypes: 'Images',
-        base64: true,
+        // base64: true,
       });
     }
 
     if (!result.cancelled) {
-      /*
-      this.setState({
-        imageConvertLoading: true,
-        imageConvertError: false,
+
+      const resizedImageTag = await new Promise((resolve, reject) => {
+        ImageEditor.cropImage(
+          result.uri,
+          {
+            offset: { x: 0, y: 0 },
+            size: { width: result.width, height: result.height },
+            displaySize: { width: 1000, height: result.height / (result.width / 1000) },
+            resizeMode: 'contain',
+          },
+          (uri) => resolve(uri),
+          () => reject(),
+        );
       });
-      // Resize the image
-      const manipResult = await ImageManipulator.manipulateAsync(
-        result.uri,
-        [{ resize: { width: 900 } }],
-        //{ base64: true },
-      );
-      console.log('Done!');
-      this.setState({ imageConvertLoading: false });
-      */
+      const base64 = await new Promise((resolve, reject) => {
+        ImageStore.getBase64ForTag(
+          resizedImageTag,
+          (base64Result) => resolve(base64Result),
+          () => reject(),
+        );
+      });
+
       const { sub } = this.props.user;
       // Generate storage URL
       this.props.generateImageUrl(
-        result.base64,
+        base64,
         `${sub}.jpeg`,
         'image/jpeg',
       );
+      // Remove the cropped image from the store
+      if (Platform.OS === 'ios') {
+        await new Promise(() => {
+          ImageStore.removeImageForTag(
+            resizedImageTag,
+          );
+        });
+      }
     }
   };
 
   render() {
     const { imageConvertLoading, imageConvertError } = this.state;
     const { generateImageUrlLoading } = this.props.treeImage;
-    if (imageConvertLoading || generateImageUrlLoading || this.props.otherLoading) {
-      return <ActivityIndicator size={64} />;
-    }
     let style = [styles.addSymbol, { flexDirection: 'row', padding: 5 }];
     if (this.props.topRight) {
       style = [
         styles.topRightSymbol,
-        { flexDirection: 'row', backgroundColor: 'rgba(255, 255, 255, .5)' },
+        { backgroundColor: 'rgba(255, 255, 255, .5)' },
       ];
+    }
+    if (imageConvertLoading || generateImageUrlLoading || this.props.otherLoading) {
+      return (
+        <View style={style}>
+          <ActivityIndicator size={this.state.size} />
+        </View>
+      );
     }
 
     return (
