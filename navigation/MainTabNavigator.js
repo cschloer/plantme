@@ -11,14 +11,22 @@ import TreeForm from '../screens/Map/TreeForm';
 import TreeDetail from '../screens/Map/TreeDetail';
 import LinksScreen from '../screens/LinksScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import WebScreen from '../screens/WebScreen';
+import SearchSpeciesModal from '../screens/SearchSpeciesModal';
 
 const MapStack = createStackNavigator(
   {
     Map,
     TreeForm,
     TreeDetail,
+    WebScreen,
+    SearchSpeciesModal,
   },
   {
+    cardStyle: {
+      backgroundColor: 'rgba(0, 0, 0, .5)',
+      opacity: 1,
+    },
     initialRouteName: 'Map',
   },
 );

@@ -4,21 +4,32 @@ import { connect } from 'react-redux';
 import {
   View,
   FlatList,
+  ScrollView,
 } from 'react-native';
 import {
-  Divider,
-  Text,
-  ListItem,
+  ListItem, Text,
 } from 'react-native-elements';
 
 import Error from '../../components/Error';
 import Carousel from '../../components/Carousel';
 import UploadImage from '../../components/UploadImage';
+import SpeciesListItem from '../../components/SpeciesListItem';
 
 import { createTreeImage } from '../../reducers/treeImage';
+import {
+  createTreeSpeciesVote,
+  updateTreeSpeciesVote,
+} from '../../reducers/treeSpeciesVote';
 import { styles } from '../styles';
 
 class TreeDetail extends React.Component {
+
+  static navigationOptions = ({ navigation }) => {
+    const { state } = navigation;
+    return {
+      title: `${state.params.title}`,
+    };
+  };
 
   state = {
     tree: null,
@@ -33,6 +44,10 @@ class TreeDetail extends React.Component {
       return acc;
 
     }, null);
+    this.props.navigation.setParams({
+      title: tree.species_votes.length
+        ? tree.species_votes[0][0].species.name : 'Unknown species',
+    });
     this.setState({ tree });
 
   }
@@ -49,10 +64,32 @@ class TreeDetail extends React.Component {
         return acc;
 
       }, null);
+      this.props.navigation.setParams({
+        title: tree.species_votes.length
+          ? tree.species_votes[0][0].species.name : 'Unknown species',
+      });
       this.setState({ tree });
     }
   }
 
+  handleVote = (speciesId) => {
+    console.log('HANDLING A SPECIES');
+    const { tree } = this.state;
+    const { sub: userId } = this.props.user;
+    const prevVote = tree.species_votes.reduce((acc1, voteTally) => (
+      acc1 || voteTally.reduce((acc2, vote) => {
+        if (vote.user_id === userId) {
+          return vote;
+        }
+        return acc2;
+      }, null)
+    ), null);
+    if (prevVote) {
+      this.props.updateTreeSpeciesVote(speciesId, prevVote.id);
+    } else {
+      this.props.createTreeSpeciesVote(tree.id, userId, speciesId);
+    }
+  }
 
   addNewImage = (imageUrl) => {
     const treeId = this.props.navigation.getParam('treeId', null);
@@ -67,62 +104,67 @@ class TreeDetail extends React.Component {
       return <Error />;
     }
     const { species_votes: speciesVotes, images } = tree;
-    let species = {
-      name: 'Unknown species',
-      description: 'Can you help identify this species?',
-    };
-    if (speciesVotes.length > 0) {
-      // TODO: make sure either here or backend that it has th most votes
-      ([[{ species }]] = tree.species_votes);
-    }
     return (
       <View style={styles.container}>
-        <Text h4 style={{ textAlign: 'center' }}>{species.name}</Text>
-        <Divider />
-        <Carousel
-          images={images.map(image => image.url)}
-        />
-        <View>
-          <Text style={{ textAlign: 'center' }}>Add a photo of this tree</Text>
+        <ScrollView>
+          <Carousel
+            images={images.map(image => image.url)}
+          />
+          {!images.length && (
+            <Text style={{ textAlign: 'center', paddingTop: 3 }}>Upload a photo!</Text>
+          )}
           <UploadImage
             onImageUpload={this.addNewImage}
             size={32}
             otherLoading={createTreeImageLoading}
+            topRight={images.length !== 0}
           />
-        </View>
-        <View style={styles.tabBarInfoContainer}>
-          {generateImageUrlError && <Error message={generateImageUrlError} />}
-        </View>
-        <FlatList
-          data={tree.species_votes.map(
-            (item, index) => { return { data: item, key: index.toString() }; }
-          )}
-          renderItem={({ item }) => {
-            const voteTally = item.data;
-            const userVoted = voteTally.reduce((acc, vote) => (
-              acc || vote.user_id === this.props.user.sub
-            ), false);
-            let text = `${voteTally.length} vote${voteTally.length > 1 ? 's' : ''}`;
-            if (userVoted) {
-              text = `${text}, including you`;
-            }
-            return (
-              <View>
-                <Divider />
-                <ListItem
-                  title={voteTally[0].species.name}
+          <FlatList
+            data={speciesVotes.map(
+              (item, index) => { return { data: item, key: index.toString() }; }
+            )}
+            renderItem={({ item }) => {
+              const voteTally = item.data;
+              const userVoted = voteTally.reduce((acc, vote) => (
+                acc || vote.user_id === this.props.user.sub
+              ), false);
+              let text = `${voteTally.length} vote${voteTally.length > 1 ? 's' : ''}`;
+              if (userVoted) {
+                text = `${text}, including you`;
+              }
+              return (
+                <SpeciesListItem
+                  species={voteTally[0].species}
                   subtitle={text}
                   leftIcon={{
                     name: 'tree',
                     color: userVoted ? 'green' : 'black',
                     type: 'font-awesome',
                   }}
+                  onPress={userVoted || !this.props.user.sub
+                    ? null : () => this.handleVote(voteTally[0].species_id)
+                  }
+                  navigation={this.props.navigation}
                 />
-              </View>
-            );
+              );
 
-          }}
-        />
+            }}
+          />
+          <ListItem
+            title="Vote for a new species"
+            leftIcon={{
+              name: 'question',
+              type: 'font-awesome',
+            }}
+            onPress={() => this.props.navigation.navigate(
+              'SearchSpeciesModal',
+              { onSpeciesSelect: (speciesId) => this.handleVote(speciesId) },
+            )}
+          />
+          <View style={styles.tabBarInfoContainer}>
+            {generateImageUrlError && <Error message={generateImageUrlError} />}
+          </View>
+        </ScrollView>
       </View>
     );
   }
@@ -148,6 +190,8 @@ TreeDetail.propTypes = {
   }),
   navigation: PropTypes.object,
   createTreeImage: PropTypes.func,
+  createTreeSpeciesVote: PropTypes.func,
+  updateTreeSpeciesVote: PropTypes.func,
 };
 
 const mapStateToProps = state => {
@@ -161,6 +205,8 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = {
   createTreeImage,
+  createTreeSpeciesVote,
+  updateTreeSpeciesVote,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(TreeDetail);

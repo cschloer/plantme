@@ -21,7 +21,7 @@ import { styles } from '../styles';
 
 class TreeForm extends React.Component {
   static navigationOptions = {
-    title: 'Add a tree',
+    title: 'add a tree',
   };
 
   state = {

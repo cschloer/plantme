@@ -12,8 +12,6 @@ const defaultState = {
   generateImageUrlError: false,
   createTreeImageLoading: false,
   createTreeImageError: false,
-  deleteTreeImageLoading: false,
-  deleteTreeImageError: false,
 };
 
 export default function treeImageReducer(state = defaultState, action) {

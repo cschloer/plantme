@@ -37,11 +37,13 @@ class Map extends React.Component {
   }
 
   clearCreateTreeButton = () => {
-    this.setState({
-      createTreeButton: false,
-      createTreeLatitude: null,
-      createTreeLongitude: null,
-    });
+    if (this.state.createTreeButton) {
+      this.setState({
+        createTreeButton: false,
+        createTreeLatitude: null,
+        createTreeLongitude: null,
+      });
+    }
   }
 
   getPlants = () => {
@@ -95,7 +97,7 @@ class Map extends React.Component {
             }
             return (
               <MapView.Marker
-                key={`${latitude}-${longitude}-created-${i}`}
+                key={`${latitude}-${longitude}-created-${i}-${species.name}`}
                 coordinate={{
                   latitude,
                   longitude,

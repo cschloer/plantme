@@ -11,7 +11,6 @@ import {
   Permissions,
 } from 'expo';
 
-import Error from './Error';
 import { generateImageUrl } from '../reducers/treeImage';
 import { styles } from '../screens/styles';
 
@@ -90,12 +89,20 @@ class UploadImage extends React.Component {
 
   render() {
     const { imageConvertLoading, imageConvertError } = this.state;
-    const { generateImageUrlLoading, generateImageUrlError } = this.props.treeImage;
+    const { generateImageUrlLoading } = this.props.treeImage;
     if (imageConvertLoading || generateImageUrlLoading || this.props.otherLoading) {
       return <ActivityIndicator size={64} />;
     }
+    let style = [styles.addSymbol, { flexDirection: 'row', padding: 5 }];
+    if (this.props.topRight) {
+      style = [
+        styles.topRightSymbol,
+        { flexDirection: 'row', backgroundColor: 'rgba(255, 255, 255, .5)' },
+      ];
+    }
+
     return (
-      <View style={[styles.addSymbol, { flexDirection: 'row' }]}>
+      <View style={style}>
         <TouchableOpacity
           onPress={() => { this.uploadImage(true); }}
           disabled={imageConvertLoading}
@@ -126,6 +133,7 @@ class UploadImage extends React.Component {
 }
 
 UploadImage.propTypes = {
+  topRight: PropTypes.bool,
   onImageUpload: PropTypes.func,
   color: PropTypes.string,
   size: PropTypes.number,
@@ -133,7 +141,6 @@ UploadImage.propTypes = {
   generateImageUrl: PropTypes.func,
   treeImage: PropTypes.shape({
     generateImageUrlLoading: PropTypes.bool,
-    generateImageUrlError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
     imageUrl: PropTypes.string,
   }),
   user: PropTypes.shape({
@@ -143,6 +150,7 @@ UploadImage.propTypes = {
 };
 
 UploadImage.defaultProps = {
+  topRight: false,
   color: 'black',
   size: 64,
   otherLoading: false,

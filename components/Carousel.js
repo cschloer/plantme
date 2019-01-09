@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import {
-  View, ScrollView, Image,
+  View, Image,
   StyleSheet, Dimensions,
   Text,
 } from 'react-native';
 import { Constants } from 'expo';
+import SideSwipe from 'react-native-sideswipe';
 
 const { width } = Dimensions.get('window');
 const height = width * 0.8;
@@ -36,31 +37,43 @@ const styles = StyleSheet.create({
 
 
 class Carousel extends Component {
+  state = {
+    currentIndex: 0,
+  }
+
   render() {
     const { images } = this.props;
     if (images && images.length) {
       return (
-        <View
-          style={styles.scrollContainer}
-        >
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-          >
-            {images.map((image, i) => (
-              <View key={i}>
-                <Image
-                  style={styles.image}
-                  source={{ uri: image }}
-                />
-                <View style={styles.textOverlay}>
-                  <Text style={{ color: 'white' }}> {i + 1} of {images.length} </Text>
-                </View>
+        <SideSwipe
+          index={this.state.currentIndex}
+          itemWidth={width}
+          style={{ width }}
+          data={images}
+          contentOffset={0}
+          onIndexChange={index => this.setState(() => ({ currentIndex: index }))}
+          renderItem={({
+            itemIndex,
+            currentIndex,
+            item,
+            animatedValue,
+          }) => (
+            <View
+              key={itemIndex}
+              index={itemIndex}
+              currentIndex={currentIndex}
+              animatedValue={animatedValue}
+            >
+              <Image
+                style={styles.image}
+                source={{ uri: item }}
+              />
+              <View style={styles.textOverlay}>
+                <Text style={{ color: 'white' }}> {itemIndex + 1} of {images.length} </Text>
               </View>
-            ))}
-          </ScrollView>
-        </View>
+            </View>
+          )}
+        />
       );
     }
     return null;
