@@ -1,5 +1,6 @@
 import React from 'react';
 import { Platform } from 'react-native';
+import { Icon } from 'expo';
 import { createStackNavigator, createBottomTabNavigator } from 'react-navigation';
 
 import TabBarIcon from './TabBarIcon';
@@ -9,10 +10,12 @@ import Home from '../screens/Home/Home';
 import Map from '../screens/Map/Map';
 import TreeForm from '../screens/Map/TreeForm';
 import TreeDetail from '../screens/Map/TreeDetail';
-import LinksScreen from '../screens/LinksScreen';
+import Posts from '../screens/Posts/Posts';
 import SettingsScreen from '../screens/SettingsScreen';
 import WebScreen from '../screens/WebScreen';
 import SearchSpeciesModal from '../screens/SearchSpeciesModal';
+
+import Colors from '../constants/Colors';
 
 const MapStack = createStackNavigator(
   {
@@ -79,16 +82,18 @@ HomeStack.navigationOptions = {
   ),
 };
 
-const LinksStack = createStackNavigator({
-  Links: LinksScreen,
+const PostsStack = createStackNavigator({
+  Posts,
 });
 
-LinksStack.navigationOptions = {
-  tabBarLabel: 'Links',
+PostsStack.navigationOptions = {
+  tabBarLabel: 'Posts',
   tabBarIcon: ({ focused }) => (
-    <TabBarIcon
-      focused={focused}
-      name={Platform.OS === 'ios' ? 'ios-link' : 'md-link'}
+    <Icon.MaterialIcons
+      name="question-answer"
+      size={26}
+      style={{ marginBottom: -3 }}
+      color={focused ? Colors.tabIconSelected : Colors.tabIconDefault}
     />
   ),
 };
@@ -111,6 +116,6 @@ export default createBottomTabNavigator({
   MapStack,
   ProfileStack,
   HomeStack,
-  LinksStack,
+  PostsStack,
   SettingsStack,
 });

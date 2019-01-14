@@ -1,9 +1,9 @@
-export const CREATE_TREE_SPECIES_VOTE = 'plantme/tree_species_vote/CREATE_TREE_SPECIES_VOTE';
-export const CREATE_TREE_SPECIES_VOTE_SUCCESS = 'plantme/tree_species_vote/CREATE_TREE_SPECIES_VOTE_SUCCESS';
-export const CREATE_TREE_SPECIES_VOTE_FAIL = 'plantme/tree_species_vote/CREATE_TREE_SPECIES_VOTE_FAIL';
-export const UPDATE_TREE_SPECIES_VOTE = 'plantme/tree_species_vote/UPDATE_TREE_SPECIES_VOTE';
-export const UPDATE_TREE_SPECIES_VOTE_SUCCESS = 'plantme/tree_species_vote/UPDATE_TREE_SPECIES_VOTE_SUCCESS';
-export const UPDATE_TREE_SPECIES_VOTE_FAIL = 'plantme/tree_species_vote/UPDATE_TREE_SPECIES_VOTE_FAIL';
+export const CREATE_TREE_SPECIES_VOTE = 'treemap/tree_species_vote/CREATE_TREE_SPECIES_VOTE';
+export const CREATE_TREE_SPECIES_VOTE_SUCCESS = 'treemap/tree_species_vote/CREATE_TREE_SPECIES_VOTE_SUCCESS';
+export const CREATE_TREE_SPECIES_VOTE_FAIL = 'treemap/tree_species_vote/CREATE_TREE_SPECIES_VOTE_FAIL';
+export const UPDATE_TREE_SPECIES_VOTE = 'treemap/tree_species_vote/UPDATE_TREE_SPECIES_VOTE';
+export const UPDATE_TREE_SPECIES_VOTE_SUCCESS = 'treemap/tree_species_vote/UPDATE_TREE_SPECIES_VOTE_SUCCESS';
+export const UPDATE_TREE_SPECIES_VOTE_FAIL = 'treemap/tree_species_vote/UPDATE_TREE_SPECIES_VOTE_FAIL';
 
 const defaultState = {
   createTreeSpeciesVoteLoading: false,

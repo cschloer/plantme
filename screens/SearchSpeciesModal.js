@@ -10,6 +10,8 @@ import { SearchBar } from 'react-native-elements';
 
 import { getSpecies } from '../reducers/species';
 import SpeciesListItem from '../components/SpeciesListItem';
+import Loading from '../components/Loading';
+import Error from '../components/Error';
 
 class SearchSpeciesModal extends React.Component {
 
@@ -20,6 +22,7 @@ class SearchSpeciesModal extends React.Component {
 
   state = {
     results: [],
+    loading: false,
   };
 
   componentDidMount() {
@@ -50,20 +53,69 @@ class SearchSpeciesModal extends React.Component {
 
   onChangeText = (searchText) => {
     const { speciesList } = this.props.species;
+    clearTimeout(this.filterResultsTimeout)
     if (!searchText) {
-      this.setState({ results: speciesList });
-    } else {
       this.setState({
-        results: speciesList.filter(
-          species => species.name.toLowerCase().indexOf(searchText.toLowerCase()) > -1
-        ),
+        results: speciesList,
+        loading: false,
       });
+    } else {
+      this.setState({ loading: true });
+      this.filterResultsTimeout = setTimeout(() => this.filterResults(speciesList, searchText), 50);
     }
-  };
+  }
+
+  filterResults = (speciesList, searchText) => {
+    const results = speciesList.filter(
+      species => (
+        species.name.toLowerCase().indexOf(searchText.toLowerCase()) > -1
+        || species.latin_name.toLowerCase().indexOf(searchText.toLowerCase()) > -1
+      )
+    );
+    this.setState({
+      loading: false,
+      results,
+    });
+  }
+
+
 
   // Render any loading content that you like here
   render() {
-    const { results } = this.state;
+    const { results, loading } = this.state;
+    const { speciesLoading, speciesError } = this.props.species;
+    let content = (
+      <Loading />
+    );
+    if (!speciesLoading) {
+      if (speciesError) {
+        content = <Error speciesError />;
+      } else {
+        content = (
+          <FlatList
+            data={results.map(
+              (result) => { return { ...result, key: result.id.toString() }; }
+            )}
+            renderItem={({ item }) => {
+              return (
+                <SpeciesListItem
+                  species={item}
+                  subtitle={item.latin_name}
+                  navigation={this.props.navigation}
+                  onPress={() => {
+                    const onSpeciesSelect = this.props.navigation.getParam('onSpeciesSelect', null);
+                    if (onSpeciesSelect) {
+                      onSpeciesSelect(item);
+                    }
+                    this.props.navigation.goBack();
+                  }}
+                />
+              );
+            }}
+          />
+        );
+      }
+    }
     return (
       <TouchableWithoutFeedback
         onPress={() => this.props.navigation.goBack()}
@@ -92,31 +144,13 @@ class SearchSpeciesModal extends React.Component {
               }}
             >
               <SearchBar
+                showLoading={loading}
                 lightTheme
                 onChangeText={this.onChangeText}
                 onClear={() => this.onChangeText('')}
                 placeholder="Search for a species"
               />
-              <FlatList
-                data={results.map(
-                  (result) => { return { ...result, key: result.id.toString() }; }
-                )}
-                renderItem={({ item }) => {
-                  return (
-                    <SpeciesListItem
-                      species={item}
-                      navigation={this.props.navigation}
-                      onPress={() => {
-                        const onSpeciesSelect = this.props.navigation.getParam('onSpeciesSelect', null);
-                        if (onSpeciesSelect) {
-                          onSpeciesSelect(item);
-                        }
-                        this.props.navigation.goBack();
-                      }}
-                    />
-                  );
-                }}
-              />
+              {content}
             </View>
           </TouchableWithoutFeedback>
         </View>

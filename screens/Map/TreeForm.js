@@ -149,6 +149,7 @@ class TreeForm extends React.Component {
               rotateEnabled={false}
               scrollEnabled={false}
               showsUserLocation
+              showsMyLocationButton={false}
             >
               <MapView.Marker
                 coordinate={{

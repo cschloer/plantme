@@ -99,12 +99,12 @@ export const styles = StyleSheet.create({
     zIndex: 10000,
     padding: 3,
   },
-  topRightMap: {
+  topLeftMap: {
     position: 'absolute',
-    right: 0,
-    paddingTop: Constants.statusBarHeight,
+    left: 0,
+    paddingTop: Constants.statusBarHeight + 10,
     zIndex: 10000,
-    padding: 3,
+    padding: 10,
   },
   bottomRightSymbol: {
     position: 'absolute',

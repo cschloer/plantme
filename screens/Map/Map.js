@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { MapView, Icon, Permissions } from 'expo';
+import {
+  MapView, Icon, Permissions, Constants,
+} from 'expo';
 import { connect } from 'react-redux';
 import {
   View,
@@ -23,6 +25,12 @@ class Map extends React.Component {
     createTreeButton: false,
     createTreeLatitude: null,
     createTreeLongitude: null,
+    statusBarHeight: 0,
+  }
+
+  componentWillMount() {
+    // Hack to ensure the showsMyLocationButton is shown initially. Idea is to force a repaint
+    setTimeout(() => this.setState({ statusBarHeight: Constants.statusBarHeight }), 500);
   }
 
   componentDidMount = () => {
@@ -65,14 +73,15 @@ class Map extends React.Component {
       );
     }
     return (
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, paddingTop: this.state.statusBarHeight }}>
         <MapView
           style={{ flex: 1 }}
           initialRegion={{
+            // Default to NYC for testing
             latitude: 40.709094,
             longitude: -74.008541,
-            latitudeDelta: 0.0411,
-            longitudeDelta: 0.0210,
+            latitudeDelta: 0.00411,
+            longitudeDelta: 0.00210,
           }}
           onPress={e => {
             const { latitude, longitude } = e.nativeEvent.coordinate;
@@ -85,6 +94,7 @@ class Map extends React.Component {
           onRegionChange={this.clearCreateTreeButton}
           showsUserLocation
           showsMyLocationButton
+          showsPointsOfInterest={false}
         >
           {trees.map((tree, i) => {
             const { latitude, longitude } = tree;
@@ -131,7 +141,7 @@ class Map extends React.Component {
         </MapView>
         <TouchableOpacity
           onPress={this.getPlants}
-          style={styles.topRightMap}
+          style={styles.topLeftMap}
           disabled={treesLoading}
         >
           {treesLoading

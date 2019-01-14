@@ -1,10 +1,10 @@
-export const GENERATE_IMAGE_URL = 'plantme/tree_image/GENERATE_IMAGE_URL';
-export const GENERATE_IMAGE_URL_SUCCESS = 'plantme/tree_image/GENERATE_IMAGE_URL_SUCCESS';
-export const GENERATE_IMAGE_URL_FAIL = 'plantme/tree_image/GENERATE_IMAGE_URL_FAIL';
+export const GENERATE_IMAGE_URL = 'treemap/tree_image/GENERATE_IMAGE_URL';
+export const GENERATE_IMAGE_URL_SUCCESS = 'treemap/tree_image/GENERATE_IMAGE_URL_SUCCESS';
+export const GENERATE_IMAGE_URL_FAIL = 'treemap/tree_image/GENERATE_IMAGE_URL_FAIL';
 
-export const CREATE_TREE_IMAGE = 'plantme/tree_image/CREATE_TREE_IMAGE';
-export const CREATE_TREE_IMAGE_SUCCESS = 'plantme/tree_image/CREATE_TREE_IMAGE_SUCCESS';
-export const CREATE_TREE_IMAGE_FAIL = 'plantme/tree_image/CREATE_TREE_IMAGE_FAIL';
+export const CREATE_TREE_IMAGE = 'treemap/tree_image/CREATE_TREE_IMAGE';
+export const CREATE_TREE_IMAGE_SUCCESS = 'treemap/tree_image/CREATE_TREE_IMAGE_SUCCESS';
+export const CREATE_TREE_IMAGE_FAIL = 'treemap/tree_image/CREATE_TREE_IMAGE_FAIL';
 
 const defaultState = {
   imageUrl: null,
