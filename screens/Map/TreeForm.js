@@ -5,16 +5,18 @@ import {
   View,
   Button,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { MapView } from 'expo';
 
-import { Divider, Text } from 'react-native-elements';
+import { Text, Input } from 'react-native-elements';
 
 import Error from '../../components/Error';
 import UploadImage from '../../components/UploadImage';
 import Carousel from '../../components/Carousel';
 
 import { createTree } from '../../reducers/tree';
+import { createPost } from '../../reducers/post';
 import { styles } from '../styles';
 
 class TreeForm extends React.Component {
@@ -30,6 +32,9 @@ class TreeForm extends React.Component {
   state = {
     chosenSpecies: null,
     images: [],
+    identificationHelp: false,
+    postText: '',
+    postTextComplete: false,
   }
 
   componentWillReceiveProps(nextProps) {
@@ -44,6 +49,25 @@ class TreeForm extends React.Component {
         'Map',
       );
     }
+
+    const {
+      createPostLoading: nextPostLoading,
+      createPostError: nextPostError,
+      posts: nextPosts,
+    } = nextProps.post;
+    const { createPostLoading: prevPostLoading, posts: prevPosts } = this.props.post;
+    if (
+      prevPostLoading
+      && !nextPostLoading
+      && !nextPostError
+      && nextPosts.length
+      && nextPosts.length !== prevPosts.length
+    ) {
+      this.props.navigation.navigate(
+        'PostDetail',
+        { postId: nextPosts[0].id },
+      );
+    }
   }
 
   handleSelectSpecies = (chosenSpecies) => {
@@ -53,7 +77,7 @@ class TreeForm extends React.Component {
     });
   }
 
-  createTree = () => {
+  createPost = () => {
     /* eslint-disable camelcase */
     const { sub: user_id } = this.props.user;
     /* eslint-enable camelcase */
@@ -76,20 +100,76 @@ class TreeForm extends React.Component {
         };
       }),
     });
+
+  }
+
+  createTree = (post = false) => {
+    /* eslint-disable camelcase */
+    const { sub: user_id } = this.props.user;
+    /* eslint-enable camelcase */
+    const longitude = this.props.navigation.getParam('longitude', false);
+    const latitude = this.props.navigation.getParam('latitude', false);
+    const { chosenSpecies, images, postText } = this.state;
+    const treeForm = {
+      user_id,
+      latitude,
+      longitude,
+      images: images.map(image => {
+        return {
+          url: image,
+          user_id,
+        };
+      }),
+    };
+
+    if (post) {
+      this.props.createPost({
+        text: postText,
+        user_id,
+        tree: treeForm,
+      });
+
+    } else {
+      treeForm.species_votes = [{
+        user_id,
+        species_id: chosenSpecies.id,
+      }];
+      this.props.createTree(treeForm);
+    }
   }
 
   render() {
-    const { images, chosenSpecies } = this.state;
+    const {
+      images, chosenSpecies, identificationHelp,
+      postText, postTextComplete,
+    } = this.state;
     const {
       createTreeLoading, createTreeError,
     } = this.props.tree;
     const {
+      createPostLoading, createPostError,
+    } = this.props.post;
+    const {
       generateImageUrlError,
     } = this.props.treeImage;
     let content = null;
-    if (!chosenSpecies) {
+    const selectImagesContent = (
+      <View>
+        <Carousel
+          images={images}
+        />
+        <UploadImage
+          onImageUpload={
+            imageUrl => this.setState({ images: [...images, imageUrl] })
+          }
+          topRight={images.length !== 0}
+          size={32}
+        />
+      </View>
+    );
+    if (!chosenSpecies && !identificationHelp) {
       content = (
-        <View style={{ padding: 5 }}>
+        <ScrollView style={{ padding: 5 }}>
           <View style={{ paddingVertical: 10 }}>
             <Button
               title="select a species"
@@ -97,93 +177,145 @@ class TreeForm extends React.Component {
                 'SearchSpeciesModal',
                 { onSpeciesSelect: this.handleSelectSpecies },
               )}
-              buttonStyle={{ paddingBottom: 5 }}
             />
           </View>
           <View style={{ paddingTop: 10 }}>
             <Button
               title="identification help"
+              onPress={() => this.setState({ identificationHelp: true })}
+            />
+          </View>
+        </ScrollView>
+      );
+    } else if (identificationHelp && !postTextComplete) {
+      content = (
+        <ScrollView style={{ padding: 5 }}>
+          <Input
+            onChangeText={(text) => this.setState({ postText: text })}
+            value={postText}
+            label="Add a title for the post"
+            labelStyle={{ textAlign: 'center' }}
+          />
+          <View style={{ paddingTop: 5 }}>
+            <Button
+              title="next"
+              disabled={!postText}
+              onPress={() => {
+                this.setState({ postTextComplete: true });
+                this.props.navigation.setParams({
+                  title: postText,
+                });
+              }}
+            />
+          </View>
+        </ScrollView>
+      );
+
+    } else if (identificationHelp && postTextComplete) {
+      content = (
+        <ScrollView style={{ padding: 5 }}>
+          {images.length === 0 && (
+            <Text style={styles.calloutText}>
+              Add a few images to help identify this tree!
+            </Text>
+          )}
+          {selectImagesContent}
+        </ScrollView>
+      );
+    } else {
+      content = (
+        <ScrollView style={{ padding: 5 }}>
+          <View style={{ paddingBottom: 5 }}>
+            <Button
+              title="select a diffferent species"
               onPress={() => this.props.navigation.navigate(
                 'SearchSpeciesModal',
                 { onSpeciesSelect: this.handleSelectSpecies },
               )}
             />
           </View>
-        </View>
-      );
-    } else {
-      content = (
-        <View style={{ padding: 5 }}>
           {images.length === 0 && (
-            <Text style={{ textAlign: 'center' }}>No images. Why not add one?</Text>
+            <Text style={styles.calloutText}>No images. Why not add one?</Text>
           )}
-          <Carousel
-            images={images}
-          />
-          <UploadImage
-            onImageUpload={
-              imageUrl => this.setState({ images: [...images, imageUrl] })
-            }
-            topRight={images.length !== 0}
-            size={32}
-          />
-        </View>
+          {selectImagesContent}
+        </ScrollView>
       );
 
     }
+    let addTreeButton = null;
+    if (this.state.chosenSpecies) {
+      addTreeButton = (
+        <View style={styles.createTreeButton}>
+          {createTreeLoading
+            ? <ActivityIndicator size={32} />
+            : (
+              <Button
+                title="add tree"
+                onPress={this.createTree}
+              />
+            )
+          }
+        </View>
+      );
+    } else if (identificationHelp && images.length !== 0) {
+      addTreeButton = (
+        <View style={styles.createTreeButton}>
+          {createPostLoading
+            ? <ActivityIndicator size={32} />
+            : (
+              <Button
+                title="create id post"
+                onPress={() => this.createTree(true)}
+              />
+            )
+          }
+        </View>
+      );
+    }
+
     const longitude = this.props.navigation.getParam('longitude', false);
     const latitude = this.props.navigation.getParam('latitude', false);
     return (
       <View style={styles.container}>
-        <View style={{ height: '100%' }}>
-          <View style={{ height: '30%' }}>
-            <MapView
-              style={{ flex: 1 }}
-              initialRegion={{
+        <View style={{ flex: 1 }}>
+          <MapView
+            style={{ flex: 1 }}
+            initialRegion={{
+              latitude,
+              longitude,
+              latitudeDelta: 0.0011,
+              longitudeDelta: 0.005,
+            }}
+            zoomEnabled={false}
+            rotateEnabled={false}
+            scrollEnabled={false}
+            showsUserLocation
+            showsMyLocationButton={false}
+          >
+            <MapView.Marker
+              coordinate={{
                 latitude,
                 longitude,
-                latitudeDelta: 0.0011,
-                longitudeDelta: 0.005,
               }}
-              zoomEnabled={false}
-              rotateEnabled={false}
-              scrollEnabled={false}
-              showsUserLocation
-              showsMyLocationButton={false}
-            >
-              <MapView.Marker
-                coordinate={{
-                  latitude,
-                  longitude,
-                }}
-                pinColor="blue"
-              />
-            </MapView>
-          </View>
-          {content}
+              pinColor="blue"
+            />
+          </MapView>
         </View>
-        {this.state.chosenSpecies && (
-          <View style={styles.createTreeButton}>
-            {createTreeLoading
-              ? <ActivityIndicator size={32} />
-              : (
-                <Button
-                  title="add tree"
-                  onPress={this.createTree}
-                />
-              )
-            }
-          </View>
-        )}
+        <View style={{ flex: 2 }}>
+          {content}
+          {addTreeButton}
+        </View>
         <View style={styles.tabBarInfoContainer}>
           {createTreeError && <Error message={createTreeError} />}
           {generateImageUrlError && <Error message={generateImageUrlError} />}
+          {createPostError && <Error message={createPostError} />}
         </View>
       </View>
     );
   }
 }
 // TODO: clear generateImageUrlError when you switch between screens
+// onPress={() => this.createTree(true)} }
 
 TreeForm.propTypes = {
   user: PropTypes.shape({
@@ -197,8 +329,14 @@ TreeForm.propTypes = {
   treeImage: PropTypes.shape({
     generateImageUrlError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
   }),
+  post: PropTypes.shape({
+    posts: PropTypes.array,
+    createPostLoading: PropTypes.bool,
+    createPostError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
+  }),
   navigation: PropTypes.object,
   createTree: PropTypes.func,
+  createPost: PropTypes.func,
 };
 
 const mapStateToProps = state => {
@@ -206,11 +344,13 @@ const mapStateToProps = state => {
     user: state.login.profile,
     tree: state.tree,
     treeImage: state.treeImage,
+    post: state.post,
   };
 };
 
 const mapDispatchToProps = {
   createTree,
+  createPost,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(TreeForm);

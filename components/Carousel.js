@@ -30,8 +30,16 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: 'rgba(255, 255, 255, .5)',
   },
-  image: {
+  imageSmall: {
+    height: height / 2,
+    width,
+  },
+  imageMedium: {
     height,
+    width,
+  },
+  imageLarge: {
+    height: height * 1.5,
     width,
   },
 });
@@ -44,7 +52,18 @@ class Carousel extends Component {
   }
 
   render() {
-    const { images } = this.props;
+    const { images, size } = this.props;
+    let imageSize = null;
+    switch (size) {
+      case 'medium':
+        imageSize = styles.imageMedium;
+        break;
+      case 'large':
+        imageSize = styles.imageLarge;
+        break;
+      default:
+        imageSize = styles.imageSmall;
+    }
     if (images && images.length) {
       const { modal } = this.state;
       if (modal) {
@@ -69,7 +88,7 @@ class Carousel extends Component {
       }
       return (
         <View
-          style={styles.image}
+          style={imageSize}
         >
           <ImageViewer
             imageUrls={images.map((image) => {
@@ -97,6 +116,11 @@ class Carousel extends Component {
 
 Carousel.propTypes = {
   images: PropTypes.arrayOf(PropTypes.string),
+  size: PropTypes.oneOf(['small', 'medium', 'large']),
+};
+
+Carousel.defaultProps = {
+  size: 'medium',
 };
 
 export default Carousel;

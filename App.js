@@ -5,6 +5,7 @@ import {
   StatusBar,
   StyleSheet,
   View,
+  YellowBox,
 } from 'react-native';
 import {
   Constants,
@@ -22,6 +23,12 @@ import AppNavigator from './navigation/AppNavigator';
 import reducer from './reducer';
 
 const { manifest } = Constants;
+
+YellowBox.ignoreWarnings([
+  // Ignore proptype warning from 3rd party library
+  'Warning: Failed prop type: Invalid prop `ImageComponent` of type `object` supplied to `Avatar`',
+]);
+
 // Get the host computer's IP address if running locally
 const apiUrl = (typeof manifest.packagerOpts === 'object') && manifest.packagerOpts.dev
   ? 'http://'.concat(manifest.debuggerHost.split(':').shift().concat(':5000'))

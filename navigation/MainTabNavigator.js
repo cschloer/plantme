@@ -11,6 +11,7 @@ import Map from '../screens/Map/Map';
 import TreeForm from '../screens/Map/TreeForm';
 import TreeDetail from '../screens/Map/TreeDetail';
 import Posts from '../screens/Posts/Posts';
+import PostDetail from '../screens/Posts/PostDetail';
 import SettingsScreen from '../screens/SettingsScreen';
 import WebScreen from '../screens/WebScreen';
 import SearchSpeciesModal from '../screens/SearchSpeciesModal';
@@ -84,6 +85,7 @@ HomeStack.navigationOptions = {
 
 const PostsStack = createStackNavigator({
   Posts,
+  PostDetail,
 });
 
 PostsStack.navigationOptions = {

@@ -1,11 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import { Constants } from 'expo';
 import {
-  View, ScrollView,
+  ScrollView, RefreshControl
 } from 'react-native';
-import { Card, Text } from 'react-native-elements';
-import Loading from '../../components/Loading';
+import { ListItem, Text } from 'react-native-elements';
 import Error from '../../components/Error';
 
 import { getPosts } from '../../reducers/post';
@@ -13,42 +13,64 @@ import { styles } from '../styles';
 
 class Posts extends React.Component {
   static navigationOptions = {
-    title: 'Tree Identification Help',
+    header: null,
+  };
+
+  state = {
   };
 
   componentDidMount = () => {
-    this.props.getPosts();
+    this.getPosts();
   }
 
 
+  getPosts = () => {
+    this.props.getPosts(20);
+  }
+
   render() {
     const { posts, getPostsLoading, getPostsError } = this.props.post;
+    let content = null;
     if (getPostsError) {
-      return (
-        <Error message={getPostsError} />
-      );
-    }
-    if (getPostsLoading) {
-      return (
-        <Loading />
-      );
+      content = <Error message={getPostsError} />;
+    } else {
+      content = posts.map((post, i) => (
+        <ListItem
+          key={i}
+          leftAvatar={post.tree.images.length
+            ? {
+              source: { uri: post.tree.images.length && post.tree.images[0].url },
+              rounded: false,
+              size: 60,
+            } : null
+          }
+          onPress={() => this.props.navigation.navigate(
+            'PostDetail',
+            { postId: post.id },
+          )}
+          title={post.text}
+          titleProps={{ numberOfLines: 1 }}
+          subtitle={`${post.comments.length} comment${post.comments.length !== 1 ? 's' : ''}`}
+          topDivider
+          bottomDivider
+        />
+      ));
     }
     return (
-      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-        {
-          posts.map((post, i) => (
-            <Card key={i}>
-              <View>
-                <Text h4>{post.text}</Text>
-                {post.comments.map((comment, i2) => (
-                  <Text key={i2}>
-                    {comment.text}
-                  </Text>
-                ))}
-              </View>
-            </Card>
-          ))
-        }
+      <ScrollView
+        style={[
+          styles.container,
+          { paddingTop: Constants.statusBarHeight },
+        ]}
+        contentContainerStyle={styles.contentContainer}
+        refreshControl={(
+          <RefreshControl
+            refreshing={getPostsLoading}
+            onRefresh={this.getPosts}
+          />
+        )}
+      >
+        {content}
       </ScrollView>
     );
   }
@@ -61,6 +83,7 @@ Posts.propTypes = {
     getPostsError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
   }),
   getPosts: PropTypes.func,
+  navigation: PropTypes.object,
 };
 
 const mapStateToProps = state => {

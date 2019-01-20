@@ -25,7 +25,7 @@ export default function postReducer(state = defaultState, action) {
     case CREATE_POST:
       return { ...state, createPostLoading: true, createPostError: false };
     case CREATE_POST_SUCCESS:
-      return { ...state, createPostLoading: false };
+      return { ...state, createPostLoading: false, posts: [action.payload.data, ...state.posts] };
     case CREATE_POST_FAIL:
       return { ...state, createPostLoading: false, createPostError: 'There was an error while creating a post' };
     default:
@@ -33,30 +33,31 @@ export default function postReducer(state = defaultState, action) {
   }
 }
 
-export function getPosts() {
+export function getPosts(limit = 20) {
   return {
     type: GET_POSTS,
     payload: {
       request: {
         method: 'get',
-        url: '/post/',
+        url: `/post/?limit=${limit}`,
       },
     },
   };
 }
 
-export function createPost(treeId, userId) {
+export function createPost(form) {
   return {
     type: CREATE_POST,
     payload: {
       request: {
         method: 'post',
         url: '/post/',
-        data: {
-          tree_id: treeId,
-          user_id: userId,
-        },
+        data: form,
       },
     },
   };
+}
+
+export function createPostComment(postId, userId, text) {
+  return {};
 }

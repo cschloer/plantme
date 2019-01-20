@@ -66,7 +66,6 @@ export const styles = StyleSheet.create({
     backgroundColor: 'rgba(225, 225, 225, 0)',
   },
   createTreeButton: {
-    position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
@@ -134,5 +133,11 @@ export const styles = StyleSheet.create({
     backgroundColor: '#f8d7da',
     color: '#fff',
     width: '100%',
+  },
+  calloutText: {
+    color: 'grey',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
