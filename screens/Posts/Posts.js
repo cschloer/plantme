@@ -1,11 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Constants } from 'expo';
 import {
-  ScrollView, RefreshControl
+  ScrollView, RefreshControl,
 } from 'react-native';
-import { ListItem, Text } from 'react-native-elements';
+import { ListItem } from 'react-native-elements';
 import Error from '../../components/Error';
 
 import { getPosts } from '../../reducers/post';
@@ -58,11 +57,7 @@ class Posts extends React.Component {
     }
     return (
       <ScrollView
-        style={[
-          styles.container,
-          { paddingTop: Constants.statusBarHeight },
-        ]}
-        contentContainerStyle={styles.contentContainer}
+        style={styles.container}
         refreshControl={(
           <RefreshControl
             refreshing={getPostsLoading}

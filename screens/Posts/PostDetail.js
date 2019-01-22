@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {
   View, ScrollView,
+  Keyboard, TextInput,
 } from 'react-native';
 import { connect } from 'react-redux';
 import { Text, Divider } from 'react-native-elements';
@@ -11,6 +12,7 @@ import { createPostComment } from '../../reducers/post';
 import Error from '../../components/Error';
 import Loading from '../../components/Loading';
 import Carousel from '../../components/Carousel';
+import InputText from '../../components/InputText';
 import Comment from './Comment';
 
 class PostDetail extends React.Component {
@@ -28,6 +30,7 @@ class PostDetail extends React.Component {
   state = {
     post: null,
     findPostError: false,
+    newCommentText: '',
   };
 
   componentDidMount() {
@@ -42,7 +45,7 @@ class PostDetail extends React.Component {
     if (post) {
       this.setState({ post });
       this.props.navigation.setParams({
-        user: post.user_name || 'undefined',
+        user: post.user_name,
       });
     } else {
       this.setState({ findPostError: true });
@@ -73,20 +76,22 @@ class PostDetail extends React.Component {
     const {
       createPostCommentLoading, createPostCommentError,
     } = this.props.post;
-    const { post, findPostError } = this.state;
+    const { post, findPostError, newCommentText } = this.state;
 
     const postId = navigation.getParam('postId', false);
 
     let content = null;
-    if (createPostCommentError) {
-      content = <Error message={createPostCommentError} />;
-    } else if (!postId || findPostError) {
+    if (!postId || findPostError) {
       content = <Error />;
-    } else if (createPostCommentLoading || !post) {
+    } else if (!post) {
       content = <Loading />;
     } else {
       content = (
-        <ScrollView style={styles.container}>
+        <ScrollView
+          style={styles.container}
+          keyboardShouldPersistTaps="handled"
+          resetScrollToCoords={{ x: 0, y: 0 }}
+        >
           <View style={{ padding: 5 }}>
             <Text
               style={{
@@ -103,16 +108,30 @@ class PostDetail extends React.Component {
             />
           </View>
           <Divider />
-          {!post.comments.length && (
-            <Text style={styles.calloutText}>
-              No comments. Why not add one?
-            </Text>
-          )}
           {post.comments.map((comment, i) => (
             <View key={i}>
               <Comment comment={comment} />
             </View>
           ))}
+          {this.props.user.sub && (
+            <View style={{ padding: 5 }}>
+              <InputText
+                multiline
+                onChangeText={(text) => this.setState({ newCommentText: text })}
+                value={newCommentText}
+                label="add a new comment"
+                onSubmit={() => {
+                  this.props.createPostComment(post.id, this.props.user.sub, newCommentText);
+                  Keyboard.dismiss();
+                }}
+                submitDisabled={!newCommentText}
+                submitLoading={createPostCommentLoading}
+              />
+            </View>
+          )}
+          <View style={styles.tabBarInfoContainer}>
+            {createPostCommentError && <Error message={createPostCommentError} />}
+          </View>
         </ScrollView>
       );
     }
@@ -142,6 +161,7 @@ PostDetail.propTypes = {
 const mapStateToProps = state => {
   return {
     post: state.post,
+    user: state.login.profile,
   };
 };
 

@@ -9,11 +9,12 @@ import {
 } from 'react-native';
 import { MapView } from 'expo';
 
-import { Text, Input } from 'react-native-elements';
+import { Text } from 'react-native-elements';
 
 import Error from '../../components/Error';
 import UploadImage from '../../components/UploadImage';
 import Carousel from '../../components/Carousel';
+import InputText from '../../components/InputText';
 
 import { createTree } from '../../reducers/tree';
 import { createPost } from '../../reducers/post';
@@ -63,10 +64,11 @@ class TreeForm extends React.Component {
       && nextPosts.length
       && nextPosts.length !== prevPosts.length
     ) {
-      this.props.navigation.navigate(
-        'PostDetail',
-        { postId: nextPosts[0].id },
-      );
+      this.props.navigation.navigate({
+        routeName: 'PostDetail',
+        params: { postId: nextPosts[0].id },
+        key: `PostDetail-${nextPosts[0].id}`,
+      });
     }
   }
 
@@ -103,14 +105,14 @@ class TreeForm extends React.Component {
 
   }
 
-  createTree = (post = false) => {
+  getTreeForm = () => {
     /* eslint-disable camelcase */
     const { sub: user_id } = this.props.user;
     /* eslint-enable camelcase */
     const longitude = this.props.navigation.getParam('longitude', false);
     const latitude = this.props.navigation.getParam('latitude', false);
-    const { chosenSpecies, images, postText } = this.state;
-    const treeForm = {
+    const { images } = this.state;
+    return {
       user_id,
       latitude,
       longitude,
@@ -122,20 +124,34 @@ class TreeForm extends React.Component {
       }),
     };
 
-    if (post) {
-      this.props.createPost({
-        text: postText,
-        user_id,
-        tree: treeForm,
-      });
+  }
 
-    } else {
-      treeForm.species_votes = [{
-        user_id,
-        species_id: chosenSpecies.id,
-      }];
-      this.props.createTree(treeForm);
-    }
+  createPost = () => {
+    /* eslint-disable camelcase */
+    const { sub: user_id } = this.props.user;
+    /* eslint-enable camelcase */
+    const { postText } = this.state;
+    const treeForm = this.getTreeForm();
+
+    this.props.createPost({
+      text: postText,
+      user_id,
+      tree: treeForm,
+    });
+  }
+
+  createTree = () => {
+    /* eslint-disable camelcase */
+    const { sub: user_id } = this.props.user;
+    /* eslint-enable camelcase */
+    const { chosenSpecies } = this.state;
+    const treeForm = this.getTreeForm();
+
+    treeForm.species_votes = [{
+      user_id,
+      species_id: chosenSpecies.id,
+    }];
+    this.props.createTree(treeForm);
   }
 
   render() {
@@ -189,25 +205,23 @@ class TreeForm extends React.Component {
       );
     } else if (identificationHelp && !postTextComplete) {
       content = (
-        <ScrollView style={{ padding: 5 }}>
-          <Input
+        <ScrollView
+          style={{ padding: 5 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <InputText
             onChangeText={(text) => this.setState({ postText: text })}
             value={postText}
             label="Add a title for the post"
             labelStyle={{ textAlign: 'center' }}
+            submitDisabled={!postText}
+            onSubmit={() => {
+              this.setState({ postTextComplete: true });
+              this.props.navigation.setParams({
+                title: postText,
+              });
+            }}
           />
-          <View style={{ paddingTop: 5 }}>
-            <Button
-              title="next"
-              disabled={!postText}
-              onPress={() => {
-                this.setState({ postTextComplete: true });
-                this.props.navigation.setParams({
-                  title: postText,
-                });
-              }}
-            />
-          </View>
         </ScrollView>
       );
 
@@ -265,7 +279,7 @@ class TreeForm extends React.Component {
             : (
               <Button
                 title="create id post"
-                onPress={() => this.createTree(true)}
+                onPress={this.createPost}
               />
             )
           }
@@ -291,6 +305,12 @@ class TreeForm extends React.Component {
             scrollEnabled={false}
             showsUserLocation
             showsMyLocationButton={false}
+            showsPointsOfInterest={false}
+            showsCompass={false}
+            showsScale={false}
+            showsTraffic={false}
+            showsIndoorLevelPicker={false}
+            toolbarEnabled={false}
           >
             <MapView.Marker
               coordinate={{

@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {
-  MapView, Icon, Permissions, Constants,
+  MapView, Icon, Permissions,
 } from 'expo';
 import { connect } from 'react-redux';
 import {
@@ -16,21 +16,39 @@ import Error from '../../components/Error';
 import { getTrees } from '../../reducers/tree';
 import { styles } from '../styles';
 
+export const getCurrentLocation = () => {
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(position => resolve(position), e => reject(e));
+  });
+};
+
+const defaultDelta = {
+  latitudeDelta: 0.003,
+  longitudeDelta: 0.003,
+};
+
+const defaultRegion = {
+  latitude: 40.709094,
+  longitude: -74.008541,
+  ...defaultDelta,
+};
+
 class Map extends React.Component {
   static navigationOptions = {
     header: null,
   };
 
   state = {
+    region: defaultRegion,
     createTreeButton: false,
     createTreeLatitude: null,
     createTreeLongitude: null,
-    statusBarHeight: 0,
+    statusBarHeight: 1,
   }
 
   componentWillMount() {
     // Hack to ensure the showsMyLocationButton is shown initially. Idea is to force a repaint
-    setTimeout(() => this.setState({ statusBarHeight: Constants.statusBarHeight }), 500);
+    setTimeout(() => this.setState({ statusBarHeight: 0 }), 500);
   }
 
   componentDidMount = () => {
@@ -38,6 +56,18 @@ class Map extends React.Component {
       this.getPlants();
     }
     this.getLocationPermissionAsync();
+    getCurrentLocation().then(position => {
+      if (position) {
+        this.setState({
+          region: {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            ...defaultDelta,
+          },
+        });
+      }
+    });
+
   }
 
   getLocationPermissionAsync = async () => {
@@ -63,26 +93,16 @@ class Map extends React.Component {
       createTreeButton,
       createTreeLatitude,
       createTreeLongitude,
+      region,
     } = this.state;
     const {
       trees, treesError, treesLoading,
     } = this.props.tree;
-    if (treesError) {
-      return (
-        <Error message={treesError} />
-      );
-    }
     return (
       <View style={{ flex: 1, paddingTop: this.state.statusBarHeight }}>
         <MapView
           style={{ flex: 1 }}
-          initialRegion={{
-            // Default to NYC for testing
-            latitude: 40.709094,
-            longitude: -74.008541,
-            latitudeDelta: 0.00411,
-            longitudeDelta: 0.00210,
-          }}
+          region={region}
           onPress={e => {
             const { latitude, longitude } = e.nativeEvent.coordinate;
             this.setState({
@@ -95,6 +115,11 @@ class Map extends React.Component {
           showsUserLocation
           showsMyLocationButton
           showsPointsOfInterest={false}
+          showsCompass={false}
+          showsScale={false}
+          showsTraffic={false}
+          showsIndoorLevelPicker={false}
+          toolbarEnabled={false}
         >
           {trees.map((tree, i) => {
             const { latitude, longitude } = tree;
@@ -181,6 +206,9 @@ class Map extends React.Component {
             }
           </View>
         )}
+        <View style={styles.tabBarInfoContainer}>
+          {treesError && <Error message={treesError} />}
+        </View>
       </View>
     );
   }
