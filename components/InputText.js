@@ -23,6 +23,7 @@ class InputText extends React.Component {
     } = this.props;
     return (
       <Input
+        disabled={submitDisabled || submitLoading}
         multiline={multiline}
         onChangeText={onChangeText}
         value={value}

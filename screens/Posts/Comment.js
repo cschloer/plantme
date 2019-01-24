@@ -19,7 +19,7 @@ class Comment extends React.Component {
     const commentAge = this.dateAgeDays(new Date(comment.created));
     return (
       <View>
-        <Card>
+        <Card containerStyle={{ marginVertical: 10 }}>
           <Text
             style={{ color: 'gray', left: 0 }}
           >

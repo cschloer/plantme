@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {
   View, ScrollView,
-  Keyboard, TextInput,
+  Keyboard, Button,
 } from 'react-native';
 import { connect } from 'react-redux';
 import { Text, Divider } from 'react-native-elements';
@@ -13,6 +13,7 @@ import Error from '../../components/Error';
 import Loading from '../../components/Loading';
 import Carousel from '../../components/Carousel';
 import InputText from '../../components/InputText';
+import TreeSpeciesVote from '../../components/TreeSpeciesVote';
 import Comment from './Comment';
 
 class PostDetail extends React.Component {
@@ -63,12 +64,33 @@ class PostDetail extends React.Component {
         }
         return acc;
       }, null);
-      this.setState({ post });
+      const { post: oldPostObj, newCommentText } = this.state;
+      if (
+        oldPostObj.comments !== post.comments
+        && post.comments[post.comments.length - 1].text === newCommentText
+        && post.comments[post.comments.length - 1].user_id === this.props.user.sub
+      ) {
+        this.setState({
+          post,
+          newCommentText: '',
+        });
+      } else {
+        this.setState({ post });
+      }
       this.props.navigation.setParams({
         user: post.user_name || 'undefined',
       });
     }
 
+  }
+
+  navigateToTree = () => {
+    const { tree } = this.state.post;
+    const { latitude, longitude } = tree;
+    this.props.navigation.navigate({
+      routeName: 'Map',
+      params: { latitude, longitude },
+    });
   }
 
   render() {
@@ -108,27 +130,44 @@ class PostDetail extends React.Component {
             />
           </View>
           <Divider />
-          {post.comments.map((comment, i) => (
-            <View key={i}>
-              <Comment comment={comment} />
-            </View>
-          ))}
-          {this.props.user.sub && (
-            <View style={{ padding: 5 }}>
-              <InputText
-                multiline
-                onChangeText={(text) => this.setState({ newCommentText: text })}
-                value={newCommentText}
-                label="add a new comment"
-                onSubmit={() => {
-                  this.props.createPostComment(post.id, this.props.user.sub, newCommentText);
-                  Keyboard.dismiss();
-                }}
-                submitDisabled={!newCommentText}
-                submitLoading={createPostCommentLoading}
-              />
-            </View>
-          )}
+          <View style={{ marginVertical: 10 }}>
+            {!post.comments.length && (
+              <Text style={{ textAlign: 'center', paddingVertical: 10 }}>No comments</Text>
+            )}
+            {post.comments.map((comment, i) => (
+              <View key={i}>
+                <Comment comment={comment} />
+              </View>
+            ))}
+            {this.props.user.sub && (
+              <View style={{ padding: 5, paddingTop: 10 }}>
+                <InputText
+                  multiline
+                  onChangeText={(text) => this.setState({ newCommentText: text })}
+                  value={newCommentText}
+                  label="add a new comment"
+                  onSubmit={() => {
+                    this.props.createPostComment(post.id, this.props.user.sub, newCommentText);
+                    Keyboard.dismiss();
+                  }}
+                  submitDisabled={!newCommentText}
+                  submitLoading={createPostCommentLoading}
+                />
+              </View>
+            )}
+          </View>
+          <View style={{ paddingTop: 5 }}>
+            <TreeSpeciesVote
+              treeId={post.tree.id}
+              navigation={this.props.navigation}
+            />
+          </View>
+          <View style={{ paddingTop: 5 }}>
+            <Button
+              title="View tree on map"
+              onPress={this.navigateToTree}
+            />
+          </View>
           <View style={styles.tabBarInfoContainer}>
             {createPostCommentError && <Error message={createPostCommentError} />}
           </View>

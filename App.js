@@ -14,6 +14,9 @@ import {
   Font,
   Icon,
 } from 'expo';
+import {
+  SafeAreaView,
+} from 'react-navigation';
 import { createStore, applyMiddleware } from 'redux';
 import { Provider } from 'react-redux';
 import axios from 'axios';
@@ -28,6 +31,12 @@ YellowBox.ignoreWarnings([
   // Ignore proptype warning from 3rd party library
   'Warning: Failed prop type: Invalid prop `ImageComponent` of type `object` supplied to `Avatar`',
 ]);
+
+// Workaround for header being too large
+// https://github.com/react-navigation/react-navigation/releases/tag/v1.0.0-beta.26
+if (Platform.OS === 'android') {
+  SafeAreaView.setStatusBarHeight(0);
+}
 
 // Get the host computer's IP address if running locally
 const apiUrl = (typeof manifest.packagerOpts === 'object') && manifest.packagerOpts.dev

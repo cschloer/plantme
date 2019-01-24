@@ -1,7 +1,7 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import {
   ActivityIndicator,
-  StatusBar,
   StyleSheet,
   View,
 } from 'react-native';
@@ -18,15 +18,23 @@ class Loading extends React.Component {
 
   // Render any loading content that you like here
   render() {
+    const { size, style } = this.props;
     return (
-      <View style={styles.container}>
-        <ActivityIndicator />
-        <StatusBar barStyle="default" />
+      <View style={[styles.container, style]}>
+        <ActivityIndicator size={size} />
       </View>
     );
   }
 }
 
-Loading.propTypes = {};
+Loading.propTypes = {
+  size: PropTypes.number,
+  style: PropTypes.object,
+};
+
+Loading.defaultProps = {
+  size: 32,
+  style: {},
+};
 
 export default Loading;

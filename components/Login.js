@@ -9,6 +9,9 @@ import {
   View,
   AsyncStorage,
 } from 'react-native';
+import {
+ Icon,
+} from 'expo';
 import jwtDecoder from 'jwt-decode';
 import { connect } from 'react-redux';
 
@@ -55,6 +58,21 @@ const styles = StyleSheet.create({
 
 
 class Login extends React.Component {
+
+  static navigationOptions = ({ navigation }) => {
+    return {
+      headerTitle: (
+        <Icon.Feather
+          style={{ paddingLeft: 20 }}
+          onPress={() => navigation.navigate('App')}
+          name="arrow-left"
+          size={32}
+        />
+      ),
+    };
+  };
+
+
 
   loginWithAuth0 = async () => {
     const redirectUrl = AuthSession.getRedirectUrl();
@@ -135,10 +153,7 @@ class Login extends React.Component {
     return (
       <View style={styles.container}>
         <View>
-          <Text style={styles.title}>Example: Auth0 login</Text>
           <Button title="Login with Auth0" onPress={this.loginWithAuth0} />
-          <Text style={styles.title}>Example: Auth0 force Twitter</Text>
-          <Button title="Login with Auth0-Twitter" onPress={this.loginWithAuth0Twitter} />
         </View>
       </View>
     );

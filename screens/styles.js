@@ -65,10 +65,12 @@ export const styles = StyleSheet.create({
     backgroundColor: 'rgba(225, 225, 225, 0)',
   },
   createTreeButton: {
+    position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
     width: '100%',
+    zIndex: 10000,
     backgroundColor: 'rgba(225, 225, 225, 0)',
   },
   tabBarInfoText: {

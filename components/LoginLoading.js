@@ -50,7 +50,7 @@ class LoginLoading extends React.Component {
   render() {
     return (
       <View style={styles.container}>
-        <ActivityIndicator />
+        <ActivityIndicator size={64} />
         <StatusBar barStyle="default" />
       </View>
     );

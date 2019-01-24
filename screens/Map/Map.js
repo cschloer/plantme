@@ -10,8 +10,10 @@ import {
   Button,
   ActivityIndicator,
 } from 'react-native';
+import { Text } from 'react-native-elements';
 
 import Error from '../../components/Error';
+import Loading from '../../components/Loading';
 
 import { getTrees } from '../../reducers/tree';
 import { styles } from '../styles';
@@ -40,6 +42,7 @@ class Map extends React.Component {
 
   state = {
     region: defaultRegion,
+    locationLoading: true,
     createTreeButton: false,
     createTreeLatitude: null,
     createTreeLongitude: null,
@@ -53,20 +56,55 @@ class Map extends React.Component {
 
   componentDidMount = () => {
     if (this.props.tree.trees.length === 0) {
-      this.getPlants();
+      this.getTrees();
     }
     this.getLocationPermissionAsync();
-    getCurrentLocation().then(position => {
-      if (position) {
-        this.setState({
-          region: {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            ...defaultDelta,
-          },
-        });
+    getCurrentLocation().then(
+      position => {
+        if (position && this.state.locationLoading) {
+          this.setState({
+            locationLoading: false,
+            region: {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              ...defaultDelta,
+            },
+          });
+        }
+      },
+      () => {
+        this.setState({ locationLoading: false });
       }
-    });
+    );
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.navigation.state.params) {
+      const { latitude: newLat, longitude: newLong } = nextProps.navigation.state.params;
+      let { oldLat, oldLong } = {};
+      if (this.props.navigation.state.params) {
+        ({ latitude: oldLat, longitude: oldLong } = this.props.navigation.state.params);
+      }
+      if (
+        (
+          newLat !== oldLat
+          || newLong !== oldLong
+        )
+        && newLong && newLat
+      ) {
+        const region = {
+          latitude: newLat,
+          longitude: newLong,
+          ...defaultDelta,
+
+        };
+        this.setState({
+          locationLoading: false,
+          region,
+        });
+        this.mapView.animateToRegion(region, 1);
+      }
+    }
 
   }
 
@@ -84,7 +122,7 @@ class Map extends React.Component {
     }
   }
 
-  getPlants = () => {
+  getTrees = () => {
     this.props.getTrees();
   }
 
@@ -94,15 +132,20 @@ class Map extends React.Component {
       createTreeLatitude,
       createTreeLongitude,
       region,
+      locationLoading,
     } = this.state;
     const {
       trees, treesError, treesLoading,
     } = this.props.tree;
+    if (locationLoading) {
+      return <Loading style={{ backgroundColor: 'white' }} size={64} />;
+    }
     return (
-      <View style={{ flex: 1, paddingTop: this.state.statusBarHeight }}>
+      <View style={{ flex: 1, paddingTop: this.state.statusBarHeight, backgroundColor: 'white' }}>
         <MapView
+          ref={(ref) => { this.mapView = ref; }}
           style={{ flex: 1 }}
-          region={region}
+          initialRegion={region}
           onPress={e => {
             const { latitude, longitude } = e.nativeEvent.coordinate;
             this.setState({
@@ -137,8 +180,6 @@ class Map extends React.Component {
                   latitude,
                   longitude,
                 }}
-                title={species.name}
-                description={species.description}
                 onPress={this.clearCreateTreeButton}
                 onCalloutPress={() => {
                   this.props.navigation.navigate(
@@ -147,7 +188,27 @@ class Map extends React.Component {
                   );
                 }}
                 pinColor="green"
-              />
+              >
+                <Icon.FontAwesome
+                  name="circle"
+                  color="green"
+                  size={32}
+                  style={{ opacity: 0.6 }}
+                />
+                <MapView.Callout>
+                  <View style={{ flex: 1, width: 150, flexDirection: 'row' }}>
+                    <Text
+                      numberOfLines={1}
+                    >
+                      {species.name}
+                    </Text>
+                    <Icon.Feather
+                      name="chevron-right"
+                      size={32}
+                    />
+                  </View>
+                </MapView.Callout>
+              </MapView.Marker>
             );
           })}
           {createTreeButton && (
@@ -165,7 +226,7 @@ class Map extends React.Component {
           )}
         </MapView>
         <TouchableOpacity
-          onPress={this.getPlants}
+          onPress={this.getTrees}
           style={styles.topLeftMap}
           disabled={treesLoading}
         >
@@ -207,6 +268,15 @@ class Map extends React.Component {
           </View>
         )}
         <View style={styles.tabBarInfoContainer}>
+          {/* A hack to get the icon to load as the marker */}
+          <Icon.FontAwesome
+            name="circle"
+            style={{
+              opacity: 0,
+              zIndex: -1000,
+              position: 'absolute',
+            }}
+          />
           {treesError && <Error message={treesError} />}
         </View>
       </View>

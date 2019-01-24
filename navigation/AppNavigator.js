@@ -12,8 +12,8 @@ const AuthStack = createStackNavigator({ Login });
 
 export default createSwitchNavigator(
   {
-    AuthLoading: LoginLoading,
     App: AppStack,
+    AuthLoading: LoginLoading,
     Auth: AuthStack,
   },
   {
