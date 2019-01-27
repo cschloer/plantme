@@ -188,10 +188,11 @@ class Map extends React.Component {
                   );
                 }}
                 pinColor="green"
+                tracksViewChanges={false}
               >
                 <Icon.FontAwesome
                   name="circle"
-                  color="green"
+                  color={tree.species_votes.length ? 'green' : 'orange'}
                   size={32}
                   style={{ opacity: 0.6 }}
                 />

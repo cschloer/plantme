@@ -4,8 +4,6 @@ import { Icon } from 'expo';
 import { createStackNavigator, createBottomTabNavigator } from 'react-navigation';
 
 import TabBarIcon from './TabBarIcon';
-import Profile from '../screens/Profile/Profile';
-import PlantDetail from '../screens/PlantDetail/PlantDetail';
 import Home from '../screens/Home/Home';
 import Map from '../screens/Map/Map';
 import TreeForm from '../screens/Map/TreeForm';
@@ -41,26 +39,6 @@ MapStack.navigationOptions = {
     <TabBarIcon
       focused={focused}
       name={Platform.OS === 'ios' ? 'ios-map' : 'md-map'}
-    />
-  ),
-};
-
-const ProfileStack = createStackNavigator(
-  {
-    Profile,
-    PlantDetail,
-  },
-  {
-    initialRouteName: 'Profile',
-  }
-);
-
-ProfileStack.navigationOptions = {
-  tabBarLabel: 'Profile',
-  tabBarIcon: ({ focused }) => (
-    <TabBarIcon
-      focused={focused}
-      name={Platform.OS === 'ios' ? 'ios-leaf' : 'md-leaf'}
     />
   ),
 };

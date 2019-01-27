@@ -3,6 +3,7 @@ import {
   CREATE_TREE_SPECIES_VOTE_SUCCESS,
   UPDATE_TREE_SPECIES_VOTE_SUCCESS,
 } from './treeSpeciesVote';
+import { CREATE_POST_SUCCESS } from './post';
 
 export const GET_TREES = 'treemap/tree/GET_TREES';
 export const GET_TREES_SUCCESS = 'treemap/tree/GET_TREES_SUCCESS';
@@ -93,7 +94,7 @@ export default function treeReducer(state = defaultState, action) {
                 // Sort the result
               ).sort(
                 (a, b) => {
-                  const diff = b.length - a.length
+                  const diff = b.length - a.length;
                   // Equal votes are broken by whichever vote has the lowest id
                   if (diff === 0) {
                     const minA = a.reduce((acc, vote) => {
@@ -116,6 +117,11 @@ export default function treeReducer(state = defaultState, action) {
             };
           }
         ),
+      };
+    case CREATE_POST_SUCCESS:
+      return {
+        ...state,
+        trees: [...state.trees, data.tree],
       };
     default:
       return state;

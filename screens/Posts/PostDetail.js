@@ -67,6 +67,7 @@ class PostDetail extends React.Component {
       const { post: oldPostObj, newCommentText } = this.state;
       if (
         oldPostObj.comments !== post.comments
+        && post.comments.length
         && post.comments[post.comments.length - 1].text === newCommentText
         && post.comments[post.comments.length - 1].user_id === this.props.user.sub
       ) {
