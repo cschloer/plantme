@@ -64,6 +64,7 @@ class TreeForm extends React.Component {
       && nextPosts.length
       && nextPosts.length !== prevPosts.length
     ) {
+      this.props.navigation.goBack();
       this.props.navigation.navigate({
         routeName: 'PostDetail',
         params: { postId: nextPosts[0].id },
@@ -271,7 +272,7 @@ class TreeForm extends React.Component {
           }
         </View>
       );
-    } else if (identificationHelp && images.length !== 0) {
+    } else if (identificationHelp && images.length === 0) {
       addTreeButton = (
         <View style={styles.createTreeButton}>
           {createPostLoading

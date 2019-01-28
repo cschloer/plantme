@@ -1,14 +1,25 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
 import {
   ScrollView, RefreshControl,
 } from 'react-native';
 import { ListItem } from 'react-native-elements';
 import Error from '../../components/Error';
 
-import { getPosts } from '../../reducers/post';
 import { styles } from '../styles';
+
+export const getDayAgeString = (date) => {
+  const numDays = Math.round(
+    (new Date() - new Date(date)) / (1000 * 60 * 60 * 24)
+  );
+  if (numDays === 0) {
+    return 'Today';
+  }
+  if (numDays === 1) {
+    return 'Yesterday';
+  }
+  return `${numDays} days ago`;
+};
 
 class Posts extends React.Component {
   static navigationOptions = {
@@ -19,16 +30,11 @@ class Posts extends React.Component {
   };
 
   componentDidMount = () => {
-    this.getPosts();
-  }
-
-
-  getPosts = () => {
-    this.props.getPosts(20);
+    this.props.getPosts();
   }
 
   render() {
-    const { posts, getPostsLoading, getPostsError } = this.props.post;
+    const { posts, getPostsLoading, getPostsError } = this.props;
     let content = null;
     if (getPostsError) {
       content = <Error message={getPostsError} />;
@@ -49,7 +55,8 @@ class Posts extends React.Component {
           )}
           title={post.text}
           titleProps={{ numberOfLines: 1 }}
-          subtitle={`${post.comments.length} comment${post.comments.length !== 1 ? 's' : ''}`}
+          subtitle={getDayAgeString(post.created)}
+          rightSubtitle={`${post.comments.length} comment${post.comments.length !== 1 ? 's' : ''}`}
           topDivider
           bottomDivider
         />
@@ -61,7 +68,7 @@ class Posts extends React.Component {
         refreshControl={(
           <RefreshControl
             refreshing={getPostsLoading}
-            onRefresh={this.getPosts}
+            onRefresh={this.props.getPosts}
           />
         )}
       >
@@ -72,23 +79,11 @@ class Posts extends React.Component {
 }
 
 Posts.propTypes = {
-  post: PropTypes.shape({
-    posts: PropTypes.array,
-    getPostsLoading: PropTypes.bool,
-    getPostsError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
-  }),
+  posts: PropTypes.array,
+  getPostsLoading: PropTypes.bool,
+  getPostsError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
   getPosts: PropTypes.func,
   navigation: PropTypes.object,
 };
 
-const mapStateToProps = state => {
-  return {
-    post: state.post,
-  };
-};
-
-const mapDispatchToProps = {
-  getPosts,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(Posts);
+export default Posts;

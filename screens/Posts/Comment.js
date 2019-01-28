@@ -4,29 +4,20 @@ import {
   View,
 } from 'react-native';
 import { Text, Card } from 'react-native-elements';
-
+import { getDayAgeString } from './Posts';
 
 class Comment extends React.Component {
 
-  dateAgeDays = (date) => {
-    return Math.round(
-      (new Date() - date) / (1000 * 60 * 60 * 24)
-    );
-  }
 
   render() {
     const { comment } = this.props;
-    const commentAge = this.dateAgeDays(new Date(comment.created));
     return (
       <View>
         <Card containerStyle={{ marginVertical: 10 }}>
           <Text
             style={{ color: 'gray', left: 0 }}
           >
-            {commentAge > 0
-              ? `${comment.user_name} ${commentAge} day${commentAge > 1 ? 's' : ''} ago`
-              : `${comment.user_name} today`
-            }
+            {`${comment.user_name}, ${getDayAgeString(comment.created)}`}
           </Text>
           <Text style={{ fontSize: 16 }}>
             {comment.text}

@@ -1,14 +1,19 @@
 import React from 'react';
 import { Platform } from 'react-native';
 import { Icon } from 'expo';
-import { createStackNavigator, createBottomTabNavigator } from 'react-navigation';
+import {
+  createStackNavigator,
+  createBottomTabNavigator,
+  createMaterialTopTabNavigator,
+} from 'react-navigation';
 
 import TabBarIcon from './TabBarIcon';
 import Home from '../screens/Home/Home';
 import Map from '../screens/Map/Map';
 import TreeForm from '../screens/Map/TreeForm';
 import TreeDetail from '../screens/Map/TreeDetail';
-import Posts from '../screens/Posts/Posts';
+import AllPosts from '../screens/Posts/AllPosts';
+import MyPosts from '../screens/Posts/MyPosts';
 import PostDetail from '../screens/Posts/PostDetail';
 import SettingsScreen from '../screens/SettingsScreen';
 import WebScreen from '../screens/WebScreen';
@@ -61,13 +66,24 @@ HomeStack.navigationOptions = {
   ),
 };
 
-const PostsStack = createStackNavigator({
-  Posts,
+const AllPostsStack = createStackNavigator({
+  AllPosts,
   PostDetail,
   SearchSpeciesModal,
 });
 
-PostsStack.navigationOptions = {
+const MyPostsStack = createStackNavigator({
+  MyPosts,
+  PostDetail,
+  SearchSpeciesModal,
+});
+
+const PostStack = createMaterialTopTabNavigator({
+  'all posts': AllPostsStack,
+  'my posts': MyPostsStack,
+})
+
+PostStack.navigationOptions = {
   tabBarLabel: 'Posts',
   tabBarIcon: ({ focused }) => (
     <Icon.MaterialIcons
@@ -78,6 +94,7 @@ PostsStack.navigationOptions = {
     />
   ),
 };
+
 
 const SettingsStack = createStackNavigator({
   Settings: SettingsScreen,
@@ -95,8 +112,7 @@ SettingsStack.navigationOptions = {
 
 export default createBottomTabNavigator({
   MapStack,
-  ProfileStack,
   HomeStack,
-  PostsStack,
+  PostStack,
   SettingsStack,
 });

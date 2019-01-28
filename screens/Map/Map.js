@@ -49,7 +49,7 @@ class Map extends React.Component {
     statusBarHeight: 1,
   }
 
-  componentWillMount() {
+  componentWillMount = () => {
     // Hack to ensure the showsMyLocationButton is shown initially. Idea is to force a repaint
     setTimeout(() => this.setState({ statusBarHeight: 0 }), 500);
   }
@@ -62,14 +62,16 @@ class Map extends React.Component {
     getCurrentLocation().then(
       position => {
         if (position && this.state.locationLoading) {
+          const newRegion = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            ...defaultDelta,
+          };
           this.setState({
             locationLoading: false,
-            region: {
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-              ...defaultDelta,
-            },
+            region: newRegion,
           });
+          this.mapView.animateToRegion(newRegion, 0);
         }
       },
       () => {
@@ -137,11 +139,21 @@ class Map extends React.Component {
     const {
       trees, treesError, treesLoading,
     } = this.props.tree;
-    if (locationLoading) {
-      return <Loading style={{ backgroundColor: 'white' }} size={64} />;
-    }
     return (
       <View style={{ flex: 1, paddingTop: this.state.statusBarHeight, backgroundColor: 'white' }}>
+        {locationLoading && (
+          <View
+            style={{
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+              zIndex: 100001,
+              backgroundColor: 'white',
+            }}
+          >
+            <Loading size={64} />
+          </View>
+        )}
         <MapView
           ref={(ref) => { this.mapView = ref; }}
           style={{ flex: 1 }}
@@ -197,16 +209,27 @@ class Map extends React.Component {
                   style={{ opacity: 0.6 }}
                 />
                 <MapView.Callout>
-                  <View style={{ flex: 1, width: 150, flexDirection: 'row' }}>
+                  <View
+                    style={{
+                      flex: 1,
+                      width: 150,
+                      flexDirection: 'row',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
                     <Text
                       numberOfLines={1}
+                      style={{ flex: 4 }}
                     >
                       {species.name}
                     </Text>
-                    <Icon.Feather
-                      name="chevron-right"
-                      size={32}
-                    />
+                    <View style={{ marginLeft: 'auto', flex: 1 }}>
+                      <Icon.Feather
+                        name="chevron-right"
+                        size={32}
+                      />
+                    </View>
                   </View>
                 </MapView.Callout>
               </MapView.Marker>
@@ -249,14 +272,17 @@ class Map extends React.Component {
               ? (
                 <Button
                   title="Create a tree here"
-                  onPress={() => this.props.navigation.navigate(
-                    'TreeForm',
-                    {
-                      latitude: createTreeLatitude,
-                      longitude: createTreeLongitude,
-                      onReturn: this.clearCreateTreeButton,
-                    },
-                  )}
+                  onPress={() => {
+                    this.clearCreateTreeButton();
+                    this.props.navigation.navigate(
+                      'TreeForm',
+                      {
+                        latitude: createTreeLatitude,
+                        longitude: createTreeLongitude,
+                        onReturn: this.clearCreateTreeButton,
+                      },
+                    );
+                  }}
                 />
               )
               : (
