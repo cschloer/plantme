@@ -11,6 +11,7 @@ import {
 
 import SpeciesListItem from './SpeciesListItem';
 import Error from './Error';
+import Loading from './Loading';
 
 import {
   createTreeSpeciesVote,
@@ -86,7 +87,7 @@ class TreeSpeciesVote extends React.Component {
       updateTreeSpeciesVoteError,
     } = this.props.treeSpeciesVote;
     if (!this.state.tree) {
-      return <Error />;
+      return <Loading />;
     }
     const {
       species_votes: speciesVotes,

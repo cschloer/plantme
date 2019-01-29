@@ -70,12 +70,14 @@ const AllPostsStack = createStackNavigator({
   AllPosts,
   AllPostDetail: PostDetail,
   SearchSpeciesModal,
+  WebScreen,
 });
 
 const MyPostsStack = createStackNavigator({
   MyPosts,
   MyPostDetail: PostDetail,
   SearchSpeciesModal,
+  WebScreen,
 });
 
 const PostStack = createMaterialTopTabNavigator({
