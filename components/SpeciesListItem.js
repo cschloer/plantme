@@ -20,11 +20,11 @@ export default function SpeciesListItem({
       leftIcon={leftIcon}
       onPress={onPress}
       containerStyle={{ paddingVertical: 0, paddingRight: 0 }}
-      rightElement={(
+      rightElement={species.urls.length ? (
         <TouchableOpacity
           onPress={() => navigation.navigate(
             'WebScreen',
-            { uri: 'https://en.wikipedia.org/wiki/Ginkgo' },
+            { uri: species.urls[0].url },
           )}
         >
           <Icon.Feather
@@ -33,7 +33,7 @@ export default function SpeciesListItem({
             style={{ padding: 7 }}
           />
         </TouchableOpacity>
-      )}
+      ) : null}
       topDivider
     />
   );
