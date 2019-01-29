@@ -2,10 +2,10 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {
   ScrollView, RefreshControl,
+  View,
 } from 'react-native';
-import { ListItem } from 'react-native-elements';
+import { ListItem, Text } from 'react-native-elements';
 import Error from '../../components/Error';
-
 import { styles } from '../styles';
 
 export const getDayAgeString = (date) => {
@@ -34,11 +34,16 @@ class Posts extends React.Component {
   }
 
   render() {
-    const { posts, getPostsLoading, getPostsError } = this.props;
+    const {
+      posts,
+      getPostsLoading,
+      getPostsError,
+      postDetailRouteName,
+    } = this.props;
     let content = null;
     if (getPostsError) {
       content = <Error message={getPostsError} />;
-    } else {
+    } else if (posts) {
       content = posts.map((post, i) => (
         <ListItem
           key={i}
@@ -50,7 +55,7 @@ class Posts extends React.Component {
             } : null
           }
           onPress={() => this.props.navigation.navigate(
-            'PostDetail',
+            postDetailRouteName,
             { postId: post.id },
           )}
           title={post.text}
@@ -64,7 +69,6 @@ class Posts extends React.Component {
     }
     return (
       <ScrollView
-        style={styles.container}
         refreshControl={(
           <RefreshControl
             refreshing={getPostsLoading}
@@ -72,6 +76,13 @@ class Posts extends React.Component {
           />
         )}
       >
+        {posts && !posts.length && !getPostsLoading && (
+          <View style={{ padding: 5, paddingTop: 15 }}>
+            <Text style={styles.calloutText}>
+              There are no posts here
+            </Text>
+          </View>
+        )}
         {content}
       </ScrollView>
     );
@@ -80,6 +91,7 @@ class Posts extends React.Component {
 
 Posts.propTypes = {
   posts: PropTypes.array,
+  postDetailRouteName: PropTypes.string,
   getPostsLoading: PropTypes.bool,
   getPostsError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
   getPosts: PropTypes.func,

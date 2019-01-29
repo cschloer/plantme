@@ -17,7 +17,7 @@ class Comment extends React.Component {
           <Text
             style={{ color: 'gray', left: 0 }}
           >
-            {`${comment.user_name}, ${getDayAgeString(comment.created)}`}
+            {`${comment.user_name} - ${getDayAgeString(comment.created)}`}
           </Text>
           <Text style={{ fontSize: 16 }}>
             {comment.text}

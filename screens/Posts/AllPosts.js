@@ -29,6 +29,7 @@ class AllPosts extends React.Component {
         posts={posts}
         getPostsError={getPostsError}
         getPostsLoading={getPostsLoading}
+        postDetailRouteName="AllPostDetail"
         navigation={navigation}
       />
     );

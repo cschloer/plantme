@@ -128,12 +128,21 @@ export default function treeReducer(state = defaultState, action) {
   }
 }
 
-export function getTrees() {
+export function getTrees(params = {}, filters = []) {
+  const paramString = Object.keys(params).reduce(
+    (acc, param) => `${acc}${param}=${params[param]}&`,
+    '',
+  );
+  const filterString = filters.reduce(
+    (acc, filter) => `${acc}filter=${filter}&`,
+    '',
+  );
   return {
     type: GET_TREES,
     payload: {
       request: {
-        url: `/tree`,
+        url: `/tree/?${paramString}${filterString}`,
+
       },
     },
   };

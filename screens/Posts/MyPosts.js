@@ -1,9 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import { View, Button } from 'react-native';
+import { Text } from 'react-native-elements';
 
 import Posts from './Posts';
 import { getUserPosts } from '../../reducers/post';
+import { styles } from '../styles';
+
 
 class MyPosts extends React.Component {
   static navigationOptions = {
@@ -25,14 +29,25 @@ class MyPosts extends React.Component {
       userPosts,
     } = this.props.post;
     return (
-      <Posts
-        key="MyPosts"
-        getPosts={this.getPosts}
-        posts={userPosts}
-        getPostsError={getUserPostsError}
-        getPostsLoading={getUserPostsLoading}
-        navigation={navigation}
-      />
+      <View style={styles.container}>
+        <Posts
+          key="MyPosts"
+          getPosts={this.getPosts}
+          posts={userPosts}
+          getPostsError={getUserPostsError}
+          getPostsLoading={getUserPostsLoading}
+          postDetailRouteName="MyPostDetail"
+          navigation={navigation}
+        />
+        {!this.props.user.sub && (
+          <View style={styles.bottomAbsoluteButton}>
+            <Button
+              title="You must be signed in to create posts!"
+              onPress={() => this.props.navigation.navigate('Auth')}
+            />
+          </View>
+        )}
+      </View>
     );
   }
 }

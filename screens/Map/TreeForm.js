@@ -66,9 +66,8 @@ class TreeForm extends React.Component {
     ) {
       this.props.navigation.goBack();
       this.props.navigation.navigate({
-        routeName: 'PostDetail',
+        routeName: 'MyPostDetail',
         params: { postId: nextPosts[0].id },
-        key: `PostDetail-${nextPosts[0].id}`,
       });
     }
   }
@@ -222,6 +221,8 @@ class TreeForm extends React.Component {
                 title: postText,
               });
             }}
+            iconName="arrow-right"
+            submitVisible={!!postText}
           />
         </ScrollView>
       );
@@ -272,7 +273,7 @@ class TreeForm extends React.Component {
           }
         </View>
       );
-    } else if (identificationHelp && images.length === 0) {
+    } else if (identificationHelp && images.length !== 0) {
       addTreeButton = (
         <View style={styles.createTreeButton}>
           {createPostLoading

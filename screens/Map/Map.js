@@ -55,9 +55,6 @@ class Map extends React.Component {
   }
 
   componentDidMount = () => {
-    if (this.props.tree.trees.length === 0) {
-      this.getTrees();
-    }
     this.getLocationPermissionAsync();
     getCurrentLocation().then(
       position => {
@@ -71,6 +68,7 @@ class Map extends React.Component {
             locationLoading: false,
             region: newRegion,
           });
+          this.getTrees(newRegion);
           this.mapView.animateToRegion(newRegion, 0);
         }
       },
@@ -104,6 +102,7 @@ class Map extends React.Component {
           locationLoading: false,
           region,
         });
+        this.getTrees(region);
         this.mapView.animateToRegion(region, 1);
       }
     }
@@ -124,8 +123,13 @@ class Map extends React.Component {
     }
   }
 
-  getTrees = () => {
-    this.props.getTrees();
+  getTrees = (region) => {
+    this.props.getTrees({}, [
+      `latitude;lt;${region.latitude + region.latitudeDelta}`,
+      `latitude;gt;${region.latitude - region.latitudeDelta}`,
+      `longitude;lt;${region.longitude + region.longitudeDelta}`,
+      `longitude;gt;${region.longitude - region.longitudeDelta}`,
+    ]);
   }
 
   render() {
@@ -167,6 +171,10 @@ class Map extends React.Component {
             });
           }}
           onRegionChange={this.clearCreateTreeButton}
+          onRegionChangeComplete={(newRegion) => {
+            this.setState({ region: newRegion })
+            this.getTrees(newRegion);
+          }}
           showsUserLocation
           showsMyLocationButton
           showsPointsOfInterest={false}
@@ -187,7 +195,7 @@ class Map extends React.Component {
             }
             return (
               <MapView.Marker
-                key={`${latitude}-${longitude}-created-${i}-${species.name}`}
+                key={`${latitude}-${longitude}-created-${tree.id}-${species.name}`}
                 coordinate={{
                   latitude,
                   longitude,
@@ -250,7 +258,7 @@ class Map extends React.Component {
           )}
         </MapView>
         <TouchableOpacity
-          onPress={this.getTrees}
+          onPress={() => this.getTrees(this.state.region)}
           style={styles.topLeftMap}
           disabled={treesLoading}
         >
@@ -267,7 +275,7 @@ class Map extends React.Component {
           }
         </TouchableOpacity>
         {createTreeButton && (
-          <View style={styles.createTreeButton}>
+          <View style={styles.bottomAbsoluteButton}>
             {this.props.user.sub
               ? (
                 <Button

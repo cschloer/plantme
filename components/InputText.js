@@ -20,7 +20,26 @@ class InputText extends React.Component {
       multiline,
       submitDisabled,
       submitLoading,
+      submitVisible,
+      iconName,
     } = this.props;
+    let submitButton = null;
+    if (submitVisible) {
+      submitButton = submitLoading
+        ? <ActivityIndicator size={32} />
+        : (
+          <TouchableOpacity
+            onPress={onSubmit}
+            disabled={submitDisabled}
+          >
+            <Icon.MaterialCommunityIcons
+              name={iconName}
+              size={32}
+              disabled={submitDisabled}
+            />
+          </TouchableOpacity>
+        );
+    }
     return (
       <Input
         disabled={submitDisabled || submitLoading}
@@ -29,20 +48,7 @@ class InputText extends React.Component {
         value={value}
         label={label}
         labelStyle={labelStyle}
-        rightIcon={submitLoading
-          ? <ActivityIndicator size={32} />
-          : (
-            <TouchableOpacity
-              onPress={onSubmit}
-              disabled={submitDisabled}
-            >
-              <Icon.Feather
-                name="plus"
-                size={32}
-              />
-            </TouchableOpacity>
-          )
-        }
+        rightIcon={submitButton}
       />
     );
   }
@@ -55,16 +61,20 @@ InputText.propTypes = {
   label: PropTypes.string,
   labelStyle: PropTypes.object,
   multiline: PropTypes.bool,
+  submitVisible: PropTypes.bool,
   submitDisabled: PropTypes.bool,
   submitLoading: PropTypes.bool,
+  iconName: PropTypes.string,
 };
 
 InputText.defaultProps = {
   multiline: false,
   value: '',
   label: null,
+  submitVisible: true,
   submitDisabled: false,
   submitLoading: false,
+  iconName: 'plus',
 };
 
 export default InputText;

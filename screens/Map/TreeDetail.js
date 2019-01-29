@@ -4,9 +4,10 @@ import { connect } from 'react-redux';
 import {
   View,
   ScrollView,
+  Alert,
 } from 'react-native';
 import {
-  Text,
+  Text, ListItem,
 } from 'react-native-elements';
 
 import Error from '../../components/Error';
@@ -101,6 +102,23 @@ class TreeDetail extends React.Component {
             treeObj={tree}
             navigation={this.props.navigation}
           />
+          {tree.posts.length && (
+            <ListItem
+              bottomDivider
+              topDivider
+              title="View identification post"
+              leftIcon={{
+                name: 'comment-question-outline',
+                type: 'material-community',
+              }}
+              onPress={() => {
+                this.props.navigation.navigate(
+                  'AllPostDetail',
+                  { postId: tree.posts[0].id },
+                )
+              }}
+            />
+          )}
         </ScrollView>
         <View style={styles.tabBarInfoContainer}>
           {generateImageUrlError && <Error message={generateImageUrlError} />}

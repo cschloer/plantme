@@ -64,7 +64,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(225, 225, 225, 0)',
   },
-  createTreeButton: {
+  bottomAbsoluteButton: {
     position: 'absolute',
     bottom: 0,
     left: 0,

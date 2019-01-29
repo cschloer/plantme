@@ -68,13 +68,13 @@ HomeStack.navigationOptions = {
 
 const AllPostsStack = createStackNavigator({
   AllPosts,
-  PostDetail,
+  AllPostDetail: PostDetail,
   SearchSpeciesModal,
 });
 
 const MyPostsStack = createStackNavigator({
   MyPosts,
-  PostDetail,
+  MyPostDetail: PostDetail,
   SearchSpeciesModal,
 });
 

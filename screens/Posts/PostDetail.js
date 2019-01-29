@@ -2,13 +2,13 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {
   View, ScrollView,
-  Keyboard, Button,
+  Keyboard,
 } from 'react-native';
 import { connect } from 'react-redux';
-import { Text, Divider } from 'react-native-elements';
+import { ListItem, Text, Divider } from 'react-native-elements';
 
 import { styles } from '../styles';
-import { createPostComment } from '../../reducers/post';
+import { getSinglePost, createPostComment } from '../../reducers/post';
 import Error from '../../components/Error';
 import Loading from '../../components/Loading';
 import Carousel from '../../components/Carousel';
@@ -30,59 +30,84 @@ class PostDetail extends React.Component {
 
   state = {
     post: null,
-    findPostError: false,
     newCommentText: '',
   };
 
   componentDidMount() {
     const postId = this.props.navigation.getParam('postId', false);
     const { posts } = this.props.post;
-    const post = posts.reduce((acc, postObj) => {
+    if (posts) {
+      console.log('Calling get posts object', postId);
+      const post = this.getPostObject(postId, posts);
+      if (post) {
+        this.setState({ post });
+        this.props.navigation.setParams({
+          user: post.user_name,
+        });
+      } else {
+        this.props.getSinglePost(postId);
+      }
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const nextPostId = nextProps.navigation.getParam('postId', null);
+    const oldPostId = this.props.navigation.getParam('postId', null);
+    const { post: currentPost } = this.state;
+    const {
+      posts: nextPosts,
+      singlePost: nextSinglePost,
+    } = nextProps.post;
+    const {
+      posts: prevPosts,
+      singlePost: prevSinglePost,
+    } = this.props.post;
+    let post = null;
+    if (nextPostId !== oldPostId) {
+      // Handle the case where the id has changed
+      post = this.getPostObject(nextPostId, nextPosts);
+      if (!post) {
+        this.setState({ post });
+        this.props.navigation.setParams({ user: null });
+        this.props.getSinglePost(nextPostId);
+      }
+    } else if (nextSinglePost && nextSinglePost.id === nextPostId) {
+    // Handle the case where the singlePost has this postId
+      if (nextSinglePost !== prevSinglePost || !currentPost) {
+        post = nextSinglePost;
+      }
+    } else if (nextPosts && nextPosts !== prevPosts) {
+      // Hande the case where we get the post from the big list of posts
+      post = this.getPostObject(nextPostId, nextPosts);
+      if (!post && (!currentPost || currentPost.id !== nextPostId)) {
+        // A post that doesn't exist in the big list
+        this.setState({ post });
+        this.props.navigation.setParams({ user: null });
+        this.props.getSinglePost(nextPostId);
+      }
+    }
+    if (post) {
+      this.setState((prevState) => {
+        return {
+          newCommentText: (!currentPost || post.comments.length !== post.comments)
+            ? '' : prevState.newCommentText,
+          post,
+        };
+      });
+      this.props.navigation.setParams({
+        user: post.user_name || 'undefined',
+      });
+    }
+  }
+
+  getPostObject = (postId, nextPosts) => {
+    const post = nextPosts.reduce((acc, postObj) => {
       if (!acc && postObj.id === postId) {
         return postObj;
       }
       return acc;
     }, null);
-    if (post) {
-      this.setState({ post });
-      this.props.navigation.setParams({
-        user: post.user_name,
-      });
-    } else {
-      this.setState({ findPostError: true });
-    }
-  }
-
-  componentWillReceiveProps(nextProps) {
-    const { posts: nextPosts } = nextProps.post;
-    const { posts: prevPosts } = this.props.post;
-    if (nextPosts !== prevPosts) {
-      const postId = this.props.navigation.getParam('postId', null);
-      const post = nextPosts.reduce((acc, postObj) => {
-        if (!acc && postObj.id === postId) {
-          return postObj;
-        }
-        return acc;
-      }, null);
-      const { post: oldPostObj, newCommentText } = this.state;
-      if (
-        oldPostObj.comments !== post.comments
-        && post.comments.length
-        && post.comments[post.comments.length - 1].text === newCommentText
-        && post.comments[post.comments.length - 1].user_id === this.props.user.sub
-      ) {
-        this.setState({
-          post,
-          newCommentText: '',
-        });
-      } else {
-        this.setState({ post });
-      }
-      this.props.navigation.setParams({
-        user: post.user_name || 'undefined',
-      });
-    }
-
+    return post;
   }
 
   navigateToTree = () => {
@@ -95,19 +120,18 @@ class PostDetail extends React.Component {
   }
 
   render() {
-    const { navigation } = this.props;
     const {
       createPostCommentLoading, createPostCommentError,
+      getSinglePostLoading, getPostsLoading,
     } = this.props.post;
-    const { post, findPostError, newCommentText } = this.state;
-
-    const postId = navigation.getParam('postId', false);
+    const { post, newCommentText } = this.state;
+    console.log(getSinglePostLoading, getPostsLoading);
 
     let content = null;
-    if (!postId || findPostError) {
-      content = <Error />;
-    } else if (!post) {
+    if (!post && (getPostsLoading || getSinglePostLoading)) {
       content = <Loading />;
+    } else if (!post) {
+      content = <Error />;
     } else {
       content = (
         <ScrollView
@@ -153,6 +177,7 @@ class PostDetail extends React.Component {
                   }}
                   submitDisabled={!newCommentText}
                   submitLoading={createPostCommentLoading}
+                  iconName="comment-plus-outline"
                 />
               </View>
             )}
@@ -162,10 +187,14 @@ class PostDetail extends React.Component {
               treeId={post.tree.id}
               navigation={this.props.navigation}
             />
-          </View>
-          <View style={{ paddingTop: 5 }}>
-            <Button
+            <ListItem
+              bottomDivider
+              topDivider
               title="View tree on map"
+              leftIcon={{
+                name: 'map',
+                type: 'material-icons',
+              }}
               onPress={this.navigateToTree}
             />
           </View>
@@ -186,10 +215,14 @@ class PostDetail extends React.Component {
 
 PostDetail.propTypes = {
   createPostComment: PropTypes.func,
+  getSinglePost: PropTypes.func,
   post: PropTypes.shape({
     createPostCommentLoading: PropTypes.bool,
     createPostCommentError: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
+    getPostsLoading: PropTypes.bool,
     posts: PropTypes.array,
+    singlePost: PropTypes.object,
+    getSinglePostLoading: PropTypes.bool,
   }),
   user: PropTypes.shape({
     name: PropTypes.string,
@@ -207,6 +240,7 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = {
   createPostComment,
+  getSinglePost,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(PostDetail);
