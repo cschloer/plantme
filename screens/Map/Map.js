@@ -13,9 +13,11 @@ import {
 import { Text } from 'react-native-elements';
 
 import Error from '../../components/Error';
+import Login from '../../components/Login';
 import Loading from '../../components/Loading';
 
 import { getTrees } from '../../reducers/tree';
+import { setUserProfile } from '../../reducers/login';
 import { styles } from '../styles';
 
 export const getCurrentLocation = () => {
@@ -68,7 +70,6 @@ class Map extends React.Component {
             locationLoading: false,
             region: newRegion,
           });
-          this.getTrees(newRegion);
           this.mapView.animateToRegion(newRegion, 0);
         }
       },
@@ -102,7 +103,6 @@ class Map extends React.Component {
           locationLoading: false,
           region,
         });
-        this.getTrees(region);
         this.mapView.animateToRegion(region, 1);
       }
     }
@@ -172,8 +172,10 @@ class Map extends React.Component {
           }}
           onRegionChange={this.clearCreateTreeButton}
           onRegionChangeComplete={(newRegion) => {
-            this.setState({ region: newRegion })
-            this.getTrees(newRegion);
+            if (!this.state.locationLoading) {
+              this.setState({ region: newRegion });
+              this.getTrees(newRegion);
+            }
           }}
           showsUserLocation
           showsMyLocationButton
@@ -184,7 +186,7 @@ class Map extends React.Component {
           showsIndoorLevelPicker={false}
           toolbarEnabled={false}
         >
-          {trees.map((tree, i) => {
+          {trees.map((tree) => {
             const { latitude, longitude } = tree;
             let species = {
               name: 'Unknown species',
@@ -296,7 +298,7 @@ class Map extends React.Component {
               : (
                 <Button
                   title="You must be signed in to add a tree!"
-                  onPress={() => this.props.navigation.navigate('Auth')}
+                  onPress={() => Login.login(this.props.navigation, this.props.setUserProfile)}
                 />
               )
             }
@@ -324,6 +326,7 @@ Map.propTypes = {
     name: PropTypes.string,
     sub: PropTypes.string,
   }),
+  setUserProfile: PropTypes.func,
   navigation: PropTypes.object,
   tree: PropTypes.shape({
     trees: PropTypes.arrayOf(PropTypes.shape({
@@ -346,6 +349,7 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = {
   getTrees,
+  setUserProfile,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(Map);

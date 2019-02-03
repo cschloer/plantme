@@ -1,22 +1,20 @@
-import { AuthSession } from 'expo';
+import { AuthSession, Icon, Constants } from 'expo';
 import React from 'react';
 import PropTypes from 'prop-types';
 import {
   Alert,
   Button,
   StyleSheet,
-  Text,
   View,
   AsyncStorage,
 } from 'react-native';
-import {
- Icon,
-} from 'expo';
 import jwtDecoder from 'jwt-decode';
 import { connect } from 'react-redux';
+import axios from 'axios';
 
 import { setUserProfile } from '../reducers/login';
-import { getUserPlants } from '../reducers/userPlant';
+
+const { manifest } = Constants;
 
 /*
   You need to swap out the Auth0 client id and domain with
@@ -72,64 +70,164 @@ class Login extends React.Component {
     };
   };
 
+  static tokenIsExpired = async () => {
+    const tokenExpireTimeString = await AsyncStorage.getItem('tokenExpireTime');
+    let tokenExpireTime = Number.parseFloat(tokenExpireTimeString);
+    if (!tokenExpireTime) {
+      tokenExpireTime = 0;
+    }
+    return tokenExpireTime - Date.now() - 10000 < 0;
 
+  };
+
+  static refreshAccessToken = async () => {
+    const refreshToken = await AsyncStorage.getItem('refreshToken');
+    const res = await axios.post(
+      `${auth0Domain}/oauth/token`,
+      {
+        grant_type: 'refresh_token',
+        client_id: auth0ClientId,
+        refresh_token: refreshToken,
+      },
+    );
+    const {
+      access_token: accessToken,
+      expires_in: expiresIn,
+      id_token: idToken,
+    } = res.data;
+    await AsyncStorage.multiSet([
+      ['tokenExpireTime', `${expiresIn * 1000 + Date.now()}`],
+      ['idToken', idToken],
+      ['accessToken', accessToken],
+    ]);
+    axios.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+    return accessToken;
+  };
+
+  static login = async (navigation, setUserProfile2) => {
+    const apiUrl = 'http://'.concat(manifest.debuggerHost.split(':').shift().concat(':5000'));
+    const cryptoRes = await axios.get(`${apiUrl}/crypto`);
+    const { challenge, verifier } = cryptoRes.data;
+
+    const redirectUrl = AuthSession.getRedirectUrl();
+    const queryString = toQueryString({
+      client_id: auth0ClientId,
+      response_type: 'code',
+      scope: 'openid email profile offline_access',
+      audience: 'https://treemap/',
+      // nonce: await this.getNonce(),
+      code_challenge: challenge,
+      code_challenge_method: 'S256',
+      redirect_uri: redirectUrl,
+    });
+    const authRes = await AuthSession.startAsync({
+      authUrl: `${auth0Domain}/authorize${queryString}`,
+    });
+
+
+    if (authRes.params.error) {
+      Alert.alert(
+        'Error',
+        authRes.params.error_description || 'Something went wrong while logging in',
+      );
+      return;
+    }
+    const { code } = authRes.params;
+    const tokenRes = await axios.post(
+      `${auth0Domain}/oauth/token`,
+      {
+        grant_type: 'authorization_code',
+        client_id: auth0ClientId,
+        code_verifier: verifier,
+        code,
+        redirect_uri: redirectUrl,
+      },
+    );
+    const {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      id_token: idToken,
+      expires_in: expiresIn,
+    } = tokenRes.data;
+
+    const { name, sub } = jwtDecoder(idToken);
+    setUserProfile2({
+      name,
+      sub,
+    });
+    axios.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+
+    await AsyncStorage.multiSet([
+      ['tokenExpireTime', `${expiresIn * 1000 + Date.now()}`],
+      ['idToken', idToken],
+      ['accessToken', accessToken],
+      ['refreshToken', refreshToken],
+    ]);
+    // this.props.navigation.navigate('App');
+
+  }
 
   loginWithAuth0 = async () => {
+    const apiUrl = 'http://'.concat(manifest.debuggerHost.split(':').shift().concat(':5000'));
+    const res = await axios.get(`${apiUrl}/crypto`);
+    const { challenge, verifier } = res.data;
+
     const redirectUrl = AuthSession.getRedirectUrl();
     const queryString = toQueryString({
       client_id: auth0ClientId,
-      response_type: 'id_token',
-      scope: 'openid email profile',
-      audience: 'https://treemap.auth0.com/api/v2/',
-      nonce: await this.getNonce(),
-      redirect_uri: redirectUrl,
-    });
-    const result = await AuthSession.startAsync({
-      authUrl: `${auth0Domain}/authorize${queryString}`,
-    });
-    console.log('result', result);
-
-    if (result.type === 'success') {
-      this.handleParams(result.params);
-    }
-  }
-
-  loginWithAuth0Twitter = async () => {
-    const redirectUrl = AuthSession.getRedirectUrl();
-    const queryString = toQueryString({
-      connection: 'twitter',
-      client_id: auth0ClientId,
-      response_type: 'token',
-      scope: 'openid name',
+      response_type: 'code',
+      scope: 'openid email profile offline_access',
+      audience: 'https://treemap/',
+      // nonce: await this.getNonce(),
+      code_challenge: challenge,
+      code_challenge_method: 'S256',
       redirect_uri: redirectUrl,
     });
     const result = await AuthSession.startAsync({
       authUrl: `${auth0Domain}/authorize${queryString}`,
     });
 
+
     if (result.type === 'success') {
-      this.handleParams(result.params);
+      this.handleParams(result.params, verifier, redirectUrl);
     }
   }
 
-  handleParams = async (responseObj) => {
+  handleParams = async (responseObj, verifier, redirectUri) => {
     if (responseObj.error) {
       Alert.alert('Error', responseObj.error_description
         || 'something went wrong while logging in');
       return;
     }
-    const encodedToken = responseObj.id_token;
-    const decodedToken = jwtDecoder(encodedToken);
-    console.log('decodedToken', decodedToken);
-    const { name, sub } = decodedToken;
+    const { code } = responseObj;
+    const res = await axios.post(
+      `${auth0Domain}/oauth/token`,
+      {
+        grant_type: 'authorization_code',
+        client_id: auth0ClientId,
+        code_verifier: verifier,
+        code,
+        redirect_uri: redirectUri,
+      },
+    );
+    const {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      id_token: idToken,
+      expires_in: expiresIn,
+    } = res.data;
+
+    const { name, sub } = jwtDecoder(idToken);
     this.props.setUserProfile({
       name,
       sub,
     });
-    this.props.getUserPlants(sub);
-    await AsyncStorage.setItem('userToken', encodedToken);
-    console.log('navigiating to app');
-    this.props.navigation.navigate('App');
+    axios.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+    await AsyncStorage.setItem('tokenExpireTime', `${expiresIn * 1000 + Date.now()}`);
+    await AsyncStorage.setItem('idToken', idToken);
+    await AsyncStorage.setItem('accessToken', accessToken);
+    await AsyncStorage.setItem('refreshToken', refreshToken);
+    // this.props.navigation.navigate('App');
   }
 
   generateRandomString = length => {
@@ -162,13 +260,11 @@ class Login extends React.Component {
 
 Login.propTypes = {
   setUserProfile: PropTypes.func,
-  getUserPlants: PropTypes.func,
   navigation: PropTypes.object,
 };
 
 const mapDispatchToProps = {
   setUserProfile,
-  getUserPlants,
 };
 
 export default connect(null, mapDispatchToProps)(Login);

@@ -9,9 +9,9 @@ import {
 } from 'react-native';
 import jwtDecoder from 'jwt-decode';
 import { connect } from 'react-redux';
+import axios from 'axios';
 
 import { setUserProfile } from '../reducers/login';
-import { getUserPlants } from '../reducers/userPlant';
 
 const styles = StyleSheet.create({
   container: {
@@ -29,16 +29,19 @@ class LoginLoading extends React.Component {
 
   // Fetch the token from storage then navigate to our appropriate place
   bootstrapAsync = async () => {
-    const userToken = await AsyncStorage.getItem('userToken');
+    const idToken = await AsyncStorage.getItem('idToken');
     // Parse user token and add to the store
-    if (userToken) {
-      const decodedToken = jwtDecoder(userToken);
+    if (idToken) {
+      const decodedToken = jwtDecoder(idToken);
       const { name, sub } = decodedToken;
       this.props.setUserProfile({
         name,
         sub,
       });
-      this.props.getUserPlants(sub);
+      const accessToken = await AsyncStorage.getItem('accessToken');
+      if (accessToken) {
+        axios.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+      }
     }
 
     // This will switch to the App screen or Auth screen and this loading
@@ -59,13 +62,11 @@ class LoginLoading extends React.Component {
 
 LoginLoading.propTypes = {
   setUserProfile: PropTypes.func,
-  getUserPlants: PropTypes.func,
   navigation: PropTypes.object,
 };
 
 const mapDispatchToProps = {
   setUserProfile,
-  getUserPlants,
 };
 
 export default connect(null, mapDispatchToProps)(LoginLoading);

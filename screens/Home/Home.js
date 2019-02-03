@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { WebBrowser } from 'expo';
 import { connect } from 'react-redux';
+import axios from 'axios';
 
 import { MonoText } from '../../components/StyledText';
 import { styles } from '../styles';
@@ -23,6 +24,7 @@ class Home extends React.Component {
 
   signOutAsync = async () => {
     await AsyncStorage.clear();
+    delete axios.defaults.headers.common.Authorization;
     this.props.logoutUser();
     // this.props.navigation.navigate('App');
   };
@@ -64,7 +66,6 @@ class Home extends React.Component {
   };
 
   render() {
-    console.log('user', this.props.user);
     return (
       <View style={styles.container}>
         <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>

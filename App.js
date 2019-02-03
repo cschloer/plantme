@@ -23,6 +23,7 @@ import axios from 'axios';
 import axiosMiddleware from 'redux-axios-middleware';
 
 import AppNavigator from './navigation/AppNavigator';
+import Login from './components/Login';
 import reducer from './reducer';
 
 const { manifest } = Constants;
@@ -47,6 +48,27 @@ console.log('API URL', apiUrl);
 const client = axios.create({
   baseURL: apiUrl,
   responseType: 'json',
+});
+
+client.interceptors.request.use(async (config) => {
+  if (config.headers.common.Authorization) {
+    const tokenExpired = await Login.tokenIsExpired();
+    if (tokenExpired) {
+      const newToken = await Login.refreshAccessToken();
+      return {
+        ...config,
+        headers: {
+          ...config.headers,
+          common: {
+            ...config.headers.common,
+            Authorization: `Bearer ${newToken}`,
+          },
+        },
+      };
+    }
+  }
+  return config;
+
 });
 
 const store = createStore(reducer, applyMiddleware(axiosMiddleware(client)));
